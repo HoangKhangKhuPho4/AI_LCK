@@ -1,11 +1,13 @@
-// File: ai/GameMap.java
 package ai;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class GameMap {
+/**
+ * Lớp đại diện cho bản đồ trò chơi.
+ */
+public class GameMap implements Cloneable {
     private char[][] map;
     private int width;
     private int height;
@@ -156,4 +158,22 @@ public class GameMap {
         items.add(item);
     }
 
-} 
+    @Override
+    public GameMap clone() {
+        try {
+            GameMap clonedMap = (GameMap) super.clone();
+            clonedMap.map = new char[this.width][this.height];
+            for (int i = 0; i < this.width; i++) {
+                System.arraycopy(this.map[i], 0, clonedMap.map[i], 0, this.height);
+            }
+            clonedMap.items = new ArrayList<>();
+            for (Item item : this.items) {
+                clonedMap.items.add(item.clone());
+            }
+            return clonedMap;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+}

@@ -27,4 +27,4 @@ public class PatrolStrategy implements MovementStrategy {
             new RandomMovementStrategy().move(entity, game);
         }
     }
-}
+} 

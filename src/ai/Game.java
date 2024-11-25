@@ -1,10 +1,12 @@
-// File: ai/Game.java
 package ai;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Lớp đại diện cho trò chơi Bomberman.
+ */
 public class Game implements Cloneable {
     private Player player;
     private AIPlayer aiPlayer;
@@ -30,12 +32,9 @@ public class Game implements Cloneable {
         System.out.println("Người chơi được khởi tạo tại (" + player.getX() + ", " + player.getY() + ")");
     }
 
-
-
-
-
     private void initializeAIPlayer() {
-        MovementStrategy aiStrategy = new ChasePlayerStrategy();
+        // Sử dụng MinimaxStrategy với độ sâu 2, là Minimizing Player
+        MovementStrategy aiStrategy = new MinimaxStrategy(2, false);
         aiPlayer = new AIPlayer(5, 5, aiStrategy);
     }
 
@@ -52,10 +51,10 @@ public class Game implements Cloneable {
                         strategy = new RandomMovementStrategy();
                         break;
                     case 1:
-                        strategy = new ChasePlayerStrategy();
+                        strategy = new ChasePlayerStrategy(gameMap);
                         break;
                     case 2:
-                        // Ví dụ đường tuần tra đơn giản
+                        // Đường tuần tra đơn giản
                         List<int[]> patrolPath = new ArrayList<>();
                         patrolPath.add(new int[]{x, y});
                         patrolPath.add(new int[]{x + 1, y});
@@ -74,23 +73,27 @@ public class Game implements Cloneable {
         System.out.println(count + " Balloon đã được khởi tạo.");
     }
 
-    // File: ai/Game.java
-
-    public void placeBomb() {
-        // Kiểm tra xem người chơi đã đặt bom tại vị trí này chưa
+    /**
+     * Đặt bom cho một thực thể cụ thể.
+     * @param entity Thực thể đặt bom.
+     */
+    public void placeBomb(Entity entity) {
+        // Kiểm tra xem thực thể đã đặt bom tại vị trí này chưa
         for (Bomb bomb : bombs) {
-            if (bomb.getX() == player.getX() && bomb.getY() == player.getY()) {
+            if (bomb.getX() == entity.getX() && bomb.getY() == entity.getY()) {
                 return; // Đã có bom tại vị trí này
             }
         }
-        if (player.placeBomb()) {
+        if (entity.placeBomb()) {
             int countdown = 30; // Đặt countdown là 30 để bom nổ sau 3 giây
-            Bomb bomb = new Bomb(player.getX(), player.getY(), countdown, player, player.getExplosionRange());
+            Bomb bomb = new Bomb(entity.getX(), entity.getY(), countdown, entity, entity.getExplosionRange());
             addBomb(bomb);
         }
     }
 
-
+    /**
+     * Cập nhật trạng thái trò chơi.
+     */
     public void update() {
         if (gameOver || gameWon) return;
 
@@ -127,8 +130,6 @@ public class Game implements Cloneable {
             System.out.println("AIPlayer đã chết. Bạn thắng!");
         }
     }
-
-
 
     /**
      * Kiểm tra trạng thái trò chơi 
@@ -175,7 +176,6 @@ public class Game implements Cloneable {
         return explosionTiles;
     }
 
-
     /**
      * Lấy bản đồ trò chơi 
      */
@@ -207,35 +207,26 @@ public class Game implements Cloneable {
     /**
      * Lấy AIPlayer 
      */
-    public AIPlayer getAIPlayer() {
+    public AIPlayer getAiPlayer() {
         return aiPlayer;
     }
 
     /**
-     * Di chuyển người chơi 
+     * Di chuyển một thực thể trong trò chơi.
+     * @param entity Thực thể cần di chuyển.
+     * @param dx Số ô di chuyển theo trục X.
+     * @param dy Số ô di chuyển theo trục Y.
      */
-    public void movePlayer(int dx, int dy) {
+    public void moveEntity(Entity entity, int dx, int dy) {
         if (gameOver || gameWon) return;
-        int newX = player.getX() + dx;
-        int newY = player.getY() + dy;
-        if (newX >= 0 && newX < gameMap.getWidth() && newY >= 0 && newY < gameMap.getHeight()) {
-            char tile = gameMap.getTile(newX, newY);
-            boolean blocked = false;
-            // Kiểm tra va chạm với Balloon
-            for (Balloon balloon : balloons) {
-                if (balloon.isAlive() && balloon.getX() == newX && balloon.getY() == newY) {
-                    blocked = true;
-                    break;
-                }
-            }
-            // Kiểm tra va chạm với AIPlayer
-            if (aiPlayer.isAlive() && aiPlayer.getX() == newX && aiPlayer.getY() == newY) {
-                blocked = true;
-            }
-            if (tile == ' ' && !blocked) {
-                player.setX(newX);
-                player.setY(newY);
-                // Kiểm tra vật phẩm
+        int newX = entity.getX() + dx;
+        int newY = entity.getY() + dy;
+        if (isValidMove(newX, newY, entity)) {
+            entity.setX(newX);
+            entity.setY(newY);
+            // Kiểm tra vật phẩm nếu di chuyển người chơi
+            if (entity instanceof Player) {
+                Player player = (Player) entity;
                 Item item = getItemAt(newX, newY);
                 if (item != null) {
                     applyItemEffect(item, player);
@@ -247,7 +238,30 @@ public class Game implements Cloneable {
     }
 
     /**
-     * Thêm bom vào danh sách bom và đăng ký Observer 
+     * Kiểm tra xem di chuyển đến vị trí (x, y) có hợp lệ không.
+     */
+    private boolean isValidMove(int x, int y, Entity entity) {
+        if (x < 0 || x >= gameMap.getWidth() || y < 0 || y >= gameMap.getHeight()) {
+            return false;
+        }
+        char tile = gameMap.getTile(x, y);
+        if (tile != ' ') {
+            return false;
+        }
+        // Kiểm tra va chạm với các thực thể khác
+        for (Balloon balloon : balloons) {
+            if (balloon.isAlive() && balloon.getX() == x && balloon.getY() == y) {
+                return false;
+            }
+        }
+        if (aiPlayer.isAlive() && aiPlayer.getX() == x && aiPlayer.getY() == y) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Thêm bom vào danh sách bom và đăng ký Observer.
      */
     public void addBomb(Bomb bomb) {
         bombs.add(bomb);
@@ -258,8 +272,6 @@ public class Game implements Cloneable {
             bomb.attach(balloon);
         }
     }
-
-
 
     /**
      * Lấy vật phẩm tại vị trí (x, y) 
@@ -283,4 +295,27 @@ public class Game implements Cloneable {
             player.increaseExplosionRange();
         }
     }
-} 
+
+    @Override
+    public Game clone() {
+        try {
+            Game cloned = (Game) super.clone();
+            cloned.gameMap = this.gameMap.clone();
+            cloned.player = this.player.clone();
+            cloned.aiPlayer = this.aiPlayer.clone();
+            cloned.bombs = new ArrayList<>();
+            for (Bomb bomb : this.bombs) {
+                cloned.bombs.add(bomb.clone());
+            }
+            cloned.balloons = new ArrayList<>();
+            for (Balloon balloon : this.balloons) {
+                cloned.balloons.add(balloon.clone());
+            }
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+}

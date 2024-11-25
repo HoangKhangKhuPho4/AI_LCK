@@ -1,4 +1,3 @@
-// File: ai/MovementStrategy.java
 package ai;
 
 public interface MovementStrategy {

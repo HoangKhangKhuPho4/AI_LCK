@@ -1,7 +1,8 @@
 package ai;
 
-// File: ai/Player.java
-
+/**
+ * Lớp đại diện cho người chơi trong trò chơi.
+ */
 public class Player extends Entity implements Cloneable {
     private int speed;
     private int explosionRange;
@@ -16,14 +17,9 @@ public class Player extends Entity implements Cloneable {
 
     @Override
     public Player clone() {
-        try {
-            Player clonedPlayer = (Player) super.clone();
-            // Sao chép các thuộc tính cần thiết nếu có đối tượng phức tạp
-            return clonedPlayer;
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-            return null;
-        }
+        Player clonedPlayer = (Player) super.clone();
+        // Nếu có các đối tượng phức tạp cần clone sâu, thực hiện ở đây
+        return clonedPlayer;
     }
 
     @Override

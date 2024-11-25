@@ -1,11 +1,13 @@
-// File: ai/Bomb.java
 package ai;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Bomb implements Subject {
+/**
+ * Lớp đại diện cho bom trong trò chơi.
+ */
+public class Bomb implements Subject, Cloneable {
     private int x, y;
     private int countdown;
     private boolean exploded;
@@ -76,7 +78,7 @@ public class Bomb implements Subject {
     }
 
     /**
-     * Cập nhật trạng thái của bom
+     * Cập nhật trạng thái của bom.
      */
     public void tick(Game game) {
         if (!exploded) {
@@ -98,7 +100,9 @@ public class Bomb implements Subject {
         }
     }
 
-
+    /**
+     * Xử lý hiệu ứng nổ của bom.
+     */
     private void processExplosion(Game game) {
         List<int[]> explosionTiles = game.getExplosionTiles(this);
         GameMap map = game.getGameMap();
@@ -122,7 +126,6 @@ public class Bomb implements Subject {
         }
     }
 
-
     public boolean isExploded() {
         return exploded;
     }
@@ -138,4 +141,18 @@ public class Bomb implements Subject {
     public void setExplosionProcessed(boolean explosionProcessed) {
         this.explosionProcessed = explosionProcessed;
     }
-}  
+
+    @Override
+    public Bomb clone() {
+        try {
+            Bomb cloned = (Bomb) super.clone();
+            cloned.observers = new ArrayList<>(); // Observers không được clone
+            cloned.owner = this.owner.clone(); // Clone chủ nhân bom
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+}

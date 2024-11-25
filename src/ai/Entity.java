@@ -1,17 +1,23 @@
-// File: ai/Entity.java
 package ai;
 
 import java.util.List;
 
+/**
+ * Lớp trừu tượng đại diện cho một thực thể trong trò chơi.
+ */
 public abstract class Entity implements Cloneable, Observer {
     protected int x, y;
     protected boolean alive = true;
     protected int bombCount = 1;
 
-
     @Override
-    public Entity clone() throws CloneNotSupportedException {
-        return (Entity) super.clone();
+    public Entity clone() {
+        try {
+            return (Entity) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public int getX() { return x; }
@@ -38,8 +44,10 @@ public abstract class Entity implements Cloneable, Observer {
         }
     }
 
-
-    // Thêm các phương thức quản lý bom
+    /**
+     * Quản lý đặt bom.
+     * @return true nếu đặt bom thành công, false nếu không còn bom để đặt.
+     */
     public boolean placeBomb() {
         if (bombCount > 0) {
             bombCount--;
@@ -49,15 +57,23 @@ public abstract class Entity implements Cloneable, Observer {
         return false;
     }
 
-    // File: ai/Entity.java
-
+    /**
+     * Tăng số lượng bom có thể đặt.
+     */
     public void increaseBombCount() {
         bombCount++;
     }
 
-
     public int getBombCount() {
         return bombCount;
     }
+
+
+
+
+    /**
+     * Lấy phạm vi nổ của thực thể.
+     * @return phạm vi nổ.
+     */
     protected abstract int getExplosionRange();
-} 
+}

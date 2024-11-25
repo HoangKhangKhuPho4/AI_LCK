@@ -13,4 +13,4 @@ public class BombExplodedEvent extends Event {
     public List<int[]> getExplosionTiles() {
         return explosionTiles;
     }
-} 
+}

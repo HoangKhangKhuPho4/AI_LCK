@@ -1,11 +1,13 @@
-// File: ai/GameFrame.java
 package ai;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.*;
 
-public class GameFrame extends JFrame {
+/**
+ * Lớp giao diện trò chơi.
+ */
+public class GameFrame extends JFrame implements Observer {
     private Game game;
     private GamePanel gamePanel;
 
@@ -25,27 +27,30 @@ public class GameFrame extends JFrame {
                 switch (e.getKeyCode()) {
                     case KeyEvent.VK_W: // Phím W
                     case KeyEvent.VK_UP: // Phím mũi tên lên
-                        game.movePlayer(0, -1); // Di chuyển lên
+                        game.moveEntity(game.getPlayer(), 0, -1); // Di chuyển lên
                         break;
                     case KeyEvent.VK_S: // Phím S
                     case KeyEvent.VK_DOWN: // Phím mũi tên xuống
-                        game.movePlayer(0, 1); // Di chuyển xuống
+                        game.moveEntity(game.getPlayer(), 0, 1); // Di chuyển xuống
                         break;
                     case KeyEvent.VK_A: // Phím A
                     case KeyEvent.VK_LEFT: // Phím mũi tên trái
-                        game.movePlayer(-1, 0); // Di chuyển trái
+                        game.moveEntity(game.getPlayer(), -1, 0); // Di chuyển trái
                         break;
                     case KeyEvent.VK_D: // Phím D
                     case KeyEvent.VK_RIGHT: // Phím mũi tên phải
-                        game.movePlayer(1, 0); // Di chuyển phải
+                        game.moveEntity(game.getPlayer(), 1, 0); // Di chuyển phải
                         break;
                     case KeyEvent.VK_SPACE: // Phím Space
-                        game.placeBomb(); // Đặt bom
+                        game.placeBomb(game.getPlayer()); // Đặt bom
                         break;
                 }
                 refresh(); // Cập nhật lại giao diện sau khi di chuyển
             }
         });
+
+        // Đăng ký GameFrame làm Observer cho AIPlayer
+        game.getAiPlayer().attach(this);
     }
 
     /**
@@ -54,4 +59,11 @@ public class GameFrame extends JFrame {
     public void refresh() {
         gamePanel.repaint(); // Cập nhật lại màn hình
     }
-}  
+
+    @Override
+    public void update(Event event) {
+        if (event instanceof AIPlayerMovedEvent) {
+            refresh();
+        }
+    }
+}

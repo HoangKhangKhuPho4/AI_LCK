@@ -1,10 +1,9 @@
-// File: ai/Balloon.java
 package ai;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Balloon extends Entity {
+/**
+ * Lớp đại diện cho Balloon trong trò chơi.
+ */
+public class Balloon extends Entity implements Cloneable {
     private MovementStrategy movementStrategy;
     private int ticksUntilMove;
     private int moveDelay;
@@ -38,7 +37,7 @@ public class Balloon extends Entity {
         }
 
         // Kiểm tra va chạm với AIPlayer
-        AIPlayer aiPlayer = game.getAIPlayer();
+        AIPlayer aiPlayer = game.getAiPlayer(); // Sửa tên phương thức ở đây
         if (aiPlayer != null && aiPlayer.isAlive() && this.x == aiPlayer.getX() && this.y == aiPlayer.getY()) {
             aiPlayer.setAlive(false);
             System.out.println("AIPlayer bị Balloon tiêu diệt!");
@@ -48,53 +47,15 @@ public class Balloon extends Entity {
 
     @Override
     protected int getExplosionRange() {
-        // TODO Auto-generated method stub
+        // Không liên quan đến Balloon, trả về 0 hoặc giá trị phù hợp
         return 0;
     }
 
-//	private void initializeBalloons(int count) {
-//		int placed = 0;
-//		while (placed < count) {
-//
-//			int x = rand.nextInt(gameMap.getWidth());
-//	if (gameMap.getTile(x, y) == ' ' && !(x == player.getX() && y == player.getY())) {
-//				int y = rand.nextInt(gameMap.getHeight());
-//					MovementStrategy strategy = null; // Khởi tạo strategy là null
-//				switch (placed % 3) {
-//				case 0:
-//					strategy = new RandomMovementStrategy();
-//					break;
-//				case 1:
-//					strategy = new ChasePlayerStrategy();
-//					break;
-//				case 2:
-//					// Ví dụ đường tuần tra đơn giản
-//					List<int[]> patrolPath = new ArrayList<>();
-//					patrolPath.add(new int[] { x, y });
-//					// Kiểm tra x + 1 có vượt quá giới hạn không
-//					if (x + 1 < gameMap.getWidth()) {
-//						patrolPath.add(new int[] { x + 1, y });
-//						// Kiểm tra y + 1 có vượt quá giới hạn không
-//						if (y + 1 < gameMap.getHeight()) {
-//							patrolPath.add(new int[] { x + 1, y + 1 });
-//						}
-//					}
-//					if (y + 1 < gameMap.getHeight()) {
-//						patrolPath.add(new int[] { x, y + 1 });
-//					}
-//					strategy = new PatrolStrategy(patrolPath);
-//					break;
-//				default:
-//					strategy = new RandomMovementStrategy();
-//				}
-//				if (strategy != null) {
-//					Balloon balloon = new Balloon(x, y, strategy);
-//					balloons.add(balloon);
-//					placed++;
-//				}
-//			}
-//		}
-//		System.out.println(count + " Balloon đã được khởi tạo.");
-//	}
-
-}  
+    @Override
+    public Balloon clone() {
+        Balloon cloned = (Balloon) super.clone();
+        // Clone hoặc sao chép các đối tượng phức tạp nếu cần
+        cloned.movementStrategy = this.movementStrategy; // Giả sử MovementStrategy là immutable hoặc được chia sẻ
+        return cloned;
+    }
+}

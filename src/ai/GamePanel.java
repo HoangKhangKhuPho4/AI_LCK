@@ -20,7 +20,7 @@ public class GamePanel extends JPanel {
         super.paintComponent(g);
         GameMap map = game.getGameMap();
         Player player = game.getPlayer();
-        AIPlayer aiPlayer = game.getAIPlayer();
+        AIPlayer aiPlayer = game.getAiPlayer();
         List<Bomb> bombs = game.getBombs();
         List<Balloon> balloons = game.getBalloons();
         // Vẽ bản đồ
