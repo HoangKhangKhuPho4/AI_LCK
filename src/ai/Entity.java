@@ -27,6 +27,7 @@ public abstract class Entity implements Cloneable, Observer {
     public boolean isAlive() { return alive; }
     public void setAlive(boolean alive) { this.alive = alive; }
 
+    // Hàm cập nhật trạng thái của thực thể
     public abstract void update(Game game);
 
     @Override
@@ -34,6 +35,7 @@ public abstract class Entity implements Cloneable, Observer {
         if (event instanceof BombExplodedEvent) {
             BombExplodedEvent bombEvent = (BombExplodedEvent) event;
             List<int[]> explosionTiles = bombEvent.getExplosionTiles();
+            // Kiểm tra nếu thực thể đang ở trong phạm vi nổ của bom
             for (int[] tile : explosionTiles) {
                 if (this.x == tile[0] && this.y == tile[1]) {
                     this.alive = false;
@@ -68,12 +70,70 @@ public abstract class Entity implements Cloneable, Observer {
         return bombCount;
     }
 
-
-
-
     /**
      * Lấy phạm vi nổ của thực thể.
      * @return phạm vi nổ.
      */
     protected abstract int getExplosionRange();
+
+    /**
+     * Kiểm tra xem vị trí của thực thể có an toàn không (không nằm trong phạm vi nổ của bom).
+     * @param game Trạng thái trò chơi hiện tại.
+     * @return true nếu vị trí an toàn, false nếu có bom nổ gần.
+     */
+    public boolean isSafe(Game game) {
+        for (Bomb bomb : game.getBombs()) {
+            if (!bomb.isExploded()) {
+                int bombDistance = Math.abs(bomb.getX() - this.x) + Math.abs(bomb.getY() - this.y);
+                // Kiểm tra nếu thực thể đang đứng trong phạm vi bom
+                if (bombDistance <= bomb.getExplosionRange()) {
+                    return false; // Không an toàn
+                }
+            }
+        }
+        return true; // An toàn
+    }
+
+    /**
+     * Kiểm tra xem AI có nên đặt bom hay không dựa trên các yếu tố an toàn.
+     * @param game Trạng thái trò chơi hiện tại.
+     * @return true nếu AI có thể an toàn khi đặt bom, false nếu không.
+     */
+    public boolean canPlaceBombSafely(Game game) {
+        // Kiểm tra nếu vị trí của AI không an toàn
+        if (!isSafe(game)) {
+            System.out.println("AI không thể đặt bom vì vị trí không an toàn.");
+            return false;
+        }
+        // Nếu vị trí an toàn, thực hiện đặt bom
+        return placeBomb();
+    }
+
+    /**
+     * Di chuyển thực thể lên trên.
+     */
+    public void moveUp() {
+        this.y -= 1;
+    }
+
+    /**
+     * Di chuyển thực thể xuống dưới.
+     */
+    public void moveDown() {
+        this.y += 1;
+    }
+
+    /**
+     * Di chuyển thực thể sang trái.
+     */
+    public void moveLeft() {
+        this.x -= 1;
+    }
+
+    /**
+     * Di chuyển thực thể sang phải.
+     */
+    public void moveRight() {
+        this.x += 1;
+    }
 }

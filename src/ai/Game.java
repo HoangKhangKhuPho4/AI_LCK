@@ -318,4 +318,13 @@ public class Game implements Cloneable {
         }
     }
 
+    public String getStateHash() {
+
+        StringBuilder hash = new StringBuilder();
+        hash.append(player.getX()).append(player.getY());
+        for (Balloon balloon : balloons) {
+            hash.append(balloon.getX()).append(balloon.getY());
+        }
+        return hash.toString();
+    }
 }

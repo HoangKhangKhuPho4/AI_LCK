@@ -1,18 +1,24 @@
 package ai;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Lớp triển khai chiến lược di chuyển sử dụng thuật toán Minimax với Alpha-Beta Pruning.
+ * Lớp triển khai chiến lược di chuyển sử dụng thuật toán Minimax với Alpha-Beta Pruning và Transposition Table.
  */
 public class MinimaxStrategy implements MovementStrategy {
     private int maxDepth;
     private boolean isMaximizingPlayer;
 
+    // Transposition Table để lưu trữ kết quả đánh giá các trạng thái
+    private Map<String, Double> transpositionTable;
+
     public MinimaxStrategy(int maxDepth, boolean isMaximizingPlayer) {
         this.maxDepth = maxDepth;
         this.isMaximizingPlayer = isMaximizingPlayer;
+        this.transpositionTable = new HashMap<>();
     }
 
     @Override
@@ -32,7 +38,6 @@ public class MinimaxStrategy implements MovementStrategy {
         }
     }
 
-
     /**
      * Lớp nội bộ để lưu kết quả của Minimax.
      */
@@ -47,11 +52,20 @@ public class MinimaxStrategy implements MovementStrategy {
     }
 
     /**
-     * Thuật toán Minimax với Alpha-Beta Pruning.
+     * Thuật toán Minimax với Alpha-Beta Pruning và Transposition Table.
      */
     private MinimaxResult minimax(Game state, int depth, double alpha, double beta, boolean maximizingPlayer) {
+        // Kiểm tra trong Transposition Table trước
+        String stateKey = state.getStateHash();
+        if (transpositionTable.containsKey(stateKey)) {
+            double cachedValue = transpositionTable.get(stateKey);
+            return new MinimaxResult(null, cachedValue); // Trả về giá trị đã lưu
+         }
+
         if (depth == 0 || state.isGameOver() || state.isGameWon()) {
             double eval = evaluateState(state);
+            // Lưu kết quả vào Transposition Table
+            transpositionTable.put(stateKey, eval);
             return new MinimaxResult(null, eval);
         }
 
@@ -76,6 +90,8 @@ public class MinimaxStrategy implements MovementStrategy {
                     break; // Beta cut-off
                 }
             }
+            // Lưu kết quả vào Transposition Table
+            transpositionTable.put(stateKey, maxEval);
             return new MinimaxResult(bestAction, maxEval);
         } else {
             double minEval = Double.POSITIVE_INFINITY;
@@ -95,6 +111,8 @@ public class MinimaxStrategy implements MovementStrategy {
                     break; // Alpha cut-off
                 }
             }
+            // Lưu kết quả vào Transposition Table
+            transpositionTable.put(stateKey, minEval);
             return new MinimaxResult(bestAction, minEval);
         }
     }
@@ -115,7 +133,6 @@ public class MinimaxStrategy implements MovementStrategy {
         }
         return actions;
     }
-
 
     /**
      * Hàm đánh giá trạng thái trò chơi.
@@ -202,5 +219,4 @@ public class MinimaxStrategy implements MovementStrategy {
                 break;
         }
     }
-
 }
