@@ -1,30 +1,28 @@
-
 package ai;
 
-import javax.swing.SwingWorker;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Lớp đại diện cho AI Player trong trò chơi.
  */
 public class AIPlayer extends Entity implements Cloneable, Subject {
+    private Game game;
     private MovementStrategy movementStrategy;
     public int ticksUntilMove;
     public int moveDelay;
-    private int explosionRange = 1; // Thêm thuộc tính phạm vi nổ
+    private int explosionRange = 1;
     private List<Observer> observers = new ArrayList<>();
 
-    public AIPlayer(int startX, int startY, MovementStrategy strategy) {
+    // Lưu trạng thái và hành động của AI trong quá khứ
+    private List<AIState> stateHistory = new ArrayList<>();
+
+    public AIPlayer(int startX, int startY, MovementStrategy strategy, Game game) {
         this.x = startX;
         this.y = startY;
         this.movementStrategy = strategy;
         this.moveDelay = 3;
         this.ticksUntilMove = moveDelay;
-    }
-
-    public MovementStrategy getMovementStrategy() {
-        return movementStrategy;
+        this.game = game;
     }
 
     @Override
@@ -35,44 +33,99 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
         }
         ticksUntilMove--;
         if (ticksUntilMove <= 0) {
-            // Kiểm tra xem AI có nên đặt bom không
-            if (shouldPlaceBomb(game)) {
-                placeBomb(game);
-            }
+            scanForHazards(game, 3);  // Tầm nhìn trong bán kính 3 ô
+            predictBombs(game);
+            predictPlayerActions(game);
 
-            // Sử dụng AIWorker để thực hiện di chuyển AI trên một luồng riêng
+            // Lưu trạng thái hiện tại để học hỏi
+            recordState(game);
+
+            // Sử dụng AIWorker để thực hiện di chuyển
             AIWorker aiWorker = new AIWorker(this, game);
             aiWorker.execute();
         }
     }
 
-    private boolean shouldPlaceBomb(Game game) {
-        Player player = game.getPlayer();
-        int distance = Math.abs(player.getX() - x) + Math.abs(player.getY() - y);
-        // Đặt bom nếu người chơi ở gần (có thể điều chỉnh khoảng cách)
-        return distance <= 2 && bombCount > 0;
+    @Override
+    protected int getExplosionRange() {
+        return 0;
     }
 
-    private void placeBomb(Game game) {
-        if (placeBomb()) { // Gọi phương thức placeBomb() từ lớp Entity
-            int countdown = 30; // Đếm ngược 3 giây
-            Bomb bomb = new Bomb(x, y, countdown, this, explosionRange);
-            game.addBomb(bomb);
+    // Dự đoán hành động của người chơi
+    public void predictPlayerActions(Game game) {
+        Player player = game.getPlayer();
+        int distance = Math.abs(player.getX() - x) + Math.abs(player.getY() - y);
+        if (distance <= 3) {
+            System.out.println("Dự đoán: Người chơi có thể đặt bom gần!");
         }
     }
 
-    public int getExplosionRange() {
-        return explosionRange;
+    // Dự đoán bom sắp nổ
+    public void predictBombs(Game game) {
+        for (Bomb bomb : game.getBombs()) {
+            if (!bomb.isExploded()) {
+                int countdown = bomb.getCountdown();
+                if (countdown <= 5) {
+                    System.out.println("Cảnh báo: Tránh xa bom sắp nổ tại (" + bomb.getX() + "," + bomb.getY() + ")");
+                }
+            }
+        }
     }
 
-    public void increaseExplosionRange() {
-        explosionRange++;
+    // Phân tích các vật thể trong tầm nhìn (bom và balloon)
+    public void scanForHazards(Game game, int radius) {
+        List<int[]> visibleArea = getVisibleArea(radius);
+        for (int[] coord : visibleArea) {
+            int newX = coord[0];
+            int newY = coord[1];
+
+            // Kiểm tra bom
+            for (Bomb bomb : game.getBombs()) {
+                int distance = Math.abs(bomb.getX() - newX) + Math.abs(bomb.getY() - newY);
+                if (distance <= bomb.getExplosionRange()) {
+                    System.out.println("Bom gần ở: " + newX + "," + newY);
+                }
+            }
+
+            // Kiểm tra Balloon
+            for (Balloon balloon : game.getBalloons()) {
+                int distance = Math.abs(balloon.getX() - newX) + Math.abs(balloon.getY() - newY);
+                if (distance <= 2) {
+                    System.out.println("Balloon gần ở: " + newX + "," + newY);
+                }
+            }
+        }
     }
 
-    /**
-     * Thiết lập chiến lược di chuyển mới cho AI.
-     * @param strategy Chiến lược di chuyển mới.
-     */
+    // Lưu lại trạng thái của AI và kết quả
+    public void recordState(Game game) {
+        // Lưu trạng thái (vị trí, số bom, số lượng Balloon)
+        AIState state = new AIState(x, y, bombCount, game.getBalloons().size());
+        stateHistory.add(state);
+        System.out.println("Lưu trạng thái AI tại (" + x + ", " + y + ")");
+    }
+
+    // Cập nhật chiến lược sau mỗi trải nghiệm (học máy)
+    public void updateStrategy() {
+        // Giả sử bạn sử dụng thuật toán học máy để tối ưu chiến lược
+        // Cập nhật chiến lược dựa trên lịch sử trạng thái
+    }
+
+    public List<int[]> getVisibleArea(int radius) {
+        List<int[]> visibleArea = new ArrayList<>();
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                int newX = x + dx;
+                int newY = y + dy;
+                if (game.getGameMap().isValidCoordinate(newX, newY)) {
+                    visibleArea.add(new int[]{newX, newY});
+                }
+            }
+        }
+        return visibleArea;
+    }
+
+    // Cập nhật chiến lược di chuyển
     public void setMovementStrategy(MovementStrategy strategy) {
         this.movementStrategy = strategy;
     }
@@ -80,9 +133,8 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
     @Override
     public AIPlayer clone() {
         AIPlayer cloned = (AIPlayer) super.clone();
-        // Clone hoặc sao chép các đối tượng phức tạp nếu cần
-        cloned.movementStrategy = this.movementStrategy; // Giả sử MovementStrategy là immutable hoặc được chia sẻ
-        cloned.observers = new ArrayList<>(); // Observers không được clone
+        cloned.movementStrategy = this.movementStrategy;
+        cloned.stateHistory = new ArrayList<>(this.stateHistory);
         return cloned;
     }
 
@@ -103,4 +155,9 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
             observer.update(event);
         }
     }
+
+    // Phương thức để lấy chiến lược di chuyển
+    public MovementStrategy getMovementStrategy() {
+        return movementStrategy;
+     }
 }

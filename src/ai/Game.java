@@ -1,9 +1,6 @@
-
 package ai;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Lớp đại diện cho trò chơi Bomberman.
@@ -36,7 +33,7 @@ public class Game implements Cloneable {
     private void initializeAIPlayer() {
         // Sử dụng MinimaxStrategy với độ sâu 2, là Minimizing Player
         MovementStrategy aiStrategy = new MinimaxStrategy(2, false);
-        aiPlayer = new AIPlayer(5, 5, aiStrategy);
+        aiPlayer = new AIPlayer(5, 5, aiStrategy, this);  // Truyền đối tượng game (this) vào
     }
 
 
@@ -116,7 +113,7 @@ public class Game implements Cloneable {
         }
 
         if (aiPlayer.isAlive()) {
-            aiPlayer.update(this);
+            aiPlayer.update(this);  // Cập nhật AIPlayer
         }
 
         // Kiểm tra trạng thái của người chơi
@@ -133,21 +130,21 @@ public class Game implements Cloneable {
     }
 
     /**
-     * Kiểm tra trạng thái trò chơi 
+     * Kiểm tra trạng thái trò chơi
      */
     public boolean isGameOver() {
         return gameOver || gameWon;
     }
 
     /**
-     * Kiểm tra người chơi có thắng không 
+     * Kiểm tra người chơi có thắng không
      */
     public boolean isGameWon() {
         return gameWon;
     }
 
     /**
-     * Lấy danh sách các ô bị nổ của một bom 
+     * Lấy danh sách các ô bị nổ của một bom
      */
     public List<int[]> getExplosionTiles(Bomb bomb) {
         List<int[]> explosionTiles = new ArrayList<>();
@@ -178,35 +175,35 @@ public class Game implements Cloneable {
     }
 
     /**
-     * Lấy bản đồ trò chơi 
+     * Lấy bản đồ trò chơi
      */
     public GameMap getGameMap() {
         return gameMap;
     }
 
     /**
-     * Lấy danh sách các bom hiện có 
+     * Lấy danh sách các bom hiện có
      */
     public List<Bomb> getBombs() {
         return bombs;
     }
 
     /**
-     * Lấy danh sách Balloon hiện có 
+     * Lấy danh sách Balloon hiện có
      */
     public List<Balloon> getBalloons() {
         return balloons;
     }
 
     /**
-     * Lấy người chơi 
+     * Lấy người chơi
      */
     public Player getPlayer() {
         return player;
     }
 
     /**
-     * Lấy AIPlayer 
+     * Lấy AIPlayer
      */
     public AIPlayer getAiPlayer() {
         return aiPlayer;
@@ -275,7 +272,7 @@ public class Game implements Cloneable {
     }
 
     /**
-     * Lấy vật phẩm tại vị trí (x, y) 
+     * Lấy vật phẩm tại vị trí (x, y)
      */
     private Item getItemAt(int x, int y) {
         for (Item item : gameMap.getItems()) {
@@ -287,7 +284,7 @@ public class Game implements Cloneable {
     }
 
     /**
-     * Áp dụng hiệu ứng của vật phẩm 
+     * Áp dụng hiệu ứng của vật phẩm
      */
     private void applyItemEffect(Item item, Player player) {
         if (item.getType() == Item.ItemType.SPEED) {
@@ -320,7 +317,6 @@ public class Game implements Cloneable {
     }
 
     public String getStateHash() {
-
         StringBuilder hash = new StringBuilder();
         hash.append(player.getX()).append(player.getY());
         for (Balloon balloon : balloons) {

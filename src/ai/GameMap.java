@@ -177,4 +177,10 @@ public class GameMap implements Cloneable {
             return null;
         }
     }
+
+    public boolean isValidCoordinate(int x, int y) {
+        // Kiểm tra nếu tọa độ nằm trong phạm vi hợp lệ của bản đồ và là ô trống
+        return x >= 0 && x < width && y >= 0 && y < height && isWalkable(x, y);
+    }
+
 }
