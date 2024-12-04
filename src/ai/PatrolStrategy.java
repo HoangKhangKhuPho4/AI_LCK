@@ -1,3 +1,4 @@
+
 // File: ai/PatrolStrategy.java
 package ai;
 
@@ -27,4 +28,4 @@ public class PatrolStrategy implements MovementStrategy {
             new RandomMovementStrategy().move(entity, game);
         }
     }
-} 
+}

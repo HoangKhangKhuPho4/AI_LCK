@@ -1,3 +1,4 @@
+
 package ai;
 
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public class MinimaxStrategy implements MovementStrategy {
         if (transpositionTable.containsKey(stateKey)) {
             double cachedValue = transpositionTable.get(stateKey);
             return new MinimaxResult(null, cachedValue); // Trả về giá trị đã lưu
-         }
+        }
 
         if (depth == 0 || state.isGameOver() || state.isGameWon()) {
             double eval = evaluateState(state);

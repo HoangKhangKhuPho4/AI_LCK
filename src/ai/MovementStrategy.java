@@ -1,3 +1,4 @@
+
 package ai;
 
 public interface MovementStrategy {

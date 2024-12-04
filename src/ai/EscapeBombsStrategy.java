@@ -1,3 +1,4 @@
+
 // File: ai/EscapeBombsStrategy.java
 package ai;
 
@@ -28,3 +29,4 @@ public class EscapeBombsStrategy implements MovementStrategy {
         }
     }
 }
+// File: ai/Entity.java
