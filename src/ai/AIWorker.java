@@ -14,12 +14,20 @@ public class AIWorker extends SwingWorker<Void, Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-        aiPlayer.getMovementStrategy().move(aiPlayer, game);
+        try {
+            System.out.println("AIWorker bắt đầu thực thi chiến lược di chuyển.");
+            aiPlayer.getMovementStrategy().move(aiPlayer, game);
+            System.out.println("AIWorker đã hoàn thành chiến lược di chuyển.");
+        } catch (Exception e) {
+            System.err.println("Lỗi trong AIWorker: " + e.getMessage());
+            e.printStackTrace();
+        }
         return null;
     }
 
     @Override
     protected void done() {
+        aiPlayer.setExecuting(false);
         aiPlayer.ticksUntilMove = aiPlayer.moveDelay;
         System.out.println(aiPlayer.getClass().getSimpleName() + " đã di chuyển đến (" + aiPlayer.getX() + ", " + aiPlayer.getY() + ").");
         // Cập nhật giao diện trên luồng EDT
@@ -28,4 +36,5 @@ public class AIWorker extends SwingWorker<Void, Void> {
             aiPlayer.notifyObservers(new AIPlayerMovedEvent(aiPlayer.getX(), aiPlayer.getY()));
         });
     }
+
 }

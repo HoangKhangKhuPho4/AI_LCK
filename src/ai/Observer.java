@@ -1,7 +1,7 @@
 
-// File: ai/Observer.java
-package ai;
+    // File: ai/Observer.java
+    package ai;
 
-public interface Observer {
-    void update(Event event);
-}
+    public interface Observer {
+        void update(Event event);
+    }

@@ -60,6 +60,7 @@ public abstract class Entity implements Cloneable, Observer {
         return false;
     }
 
+
     /**
      * Tăng số lượng bom có thể đặt.
      */

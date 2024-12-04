@@ -1,8 +1,7 @@
-
 package ai;
 
 /**
- * Định nghĩa các loại hành động mà AI và người chơi có thể thực hiện.
+ * Enum định nghĩa các loại hành động.
  */
 public enum ActionType {
     MOVE_UP,

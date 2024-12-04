@@ -31,8 +31,8 @@ public class Game implements Cloneable {
     }
 
     private void initializeAIPlayer() {
-        // Sử dụng MinimaxStrategy với độ sâu 2, là Minimizing Player
-        MovementStrategy aiStrategy = new MinimaxStrategy(2, false);
+        // Sử dụng MinimaxStrategy với độ sâu 2, là Maximizing Player
+        MovementStrategy aiStrategy = new MinimaxStrategy(7, true); // Đổi từ false thành true
         aiPlayer = new AIPlayer(5, 5, aiStrategy, this);  // Truyền đối tượng game (this) vào
     }
 
@@ -76,7 +76,7 @@ public class Game implements Cloneable {
      * @param entity Thực thể đặt bom.
      */
     public void placeBomb(Entity entity) {
-        // Kiểm tra xem thực thể đã đặt bom tại vị trí này chưa
+        // Kiểm tra xem đã có bom tại vị trí này chưa
         for (Bomb bomb : bombs) {
             if (bomb.getX() == entity.getX() && bomb.getY() == entity.getY()) {
                 return; // Đã có bom tại vị trí này
@@ -86,8 +86,12 @@ public class Game implements Cloneable {
             int countdown = 30; // Đặt countdown là 30 để bom nổ sau 3 giây
             Bomb bomb = new Bomb(entity.getX(), entity.getY(), countdown, entity, entity.getExplosionRange());
             addBomb(bomb);
+            System.out.println("Bom được đặt tại (" + bomb.getX() + ", " + bomb.getY() + ")");
         }
     }
+
+
+
 
     /**
      * Cập nhật trạng thái trò chơi.
@@ -324,4 +328,12 @@ public class Game implements Cloneable {
         }
         return hash.toString();
     }
+
+    public void setAiPlayerPosition(int x, int y) {
+        if (aiPlayer != null) {
+            aiPlayer.setX(x);
+            aiPlayer.setY(y);
+        }
+    }
+
 }

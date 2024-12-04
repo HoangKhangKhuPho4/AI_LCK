@@ -18,6 +18,7 @@ public class Bomb implements Subject, Cloneable {
     private int explosionRange;
     private List<Observer> observers = new ArrayList<>();
 
+
     public Bomb(int x, int y, int countdown, Entity owner, int explosionRange) {
         this.x = x;
         this.y = y;
@@ -25,9 +26,11 @@ public class Bomb implements Subject, Cloneable {
         this.exploded = false;
         this.explosionDuration = 1;
         this.explosionProcessed = false;
-        this.owner = owner;
+        this.owner = owner; // Set owner cho bom
         this.explosionRange = explosionRange;
     }
+
+
 
     public int getX() {
         return x;

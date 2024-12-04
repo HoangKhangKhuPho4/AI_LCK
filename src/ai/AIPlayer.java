@@ -12,6 +12,7 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
     public int moveDelay;
     private int explosionRange = 1;
     private List<Observer> observers = new ArrayList<>();
+    private boolean isExecuting = false;
 
     // Lưu trạng thái và hành động của AI trong quá khứ
     private List<AIState> stateHistory = new ArrayList<>();
@@ -23,8 +24,15 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
         this.moveDelay = 3;
         this.ticksUntilMove = moveDelay;
         this.game = game;
+        this.bombCount = 1; // Khởi tạo số bom ban đầu
     }
+    private int escapeAttempts = 0;
+    private final int MAX_ESCAPE_ATTEMPTS = 3;
 
+
+    // Trong AIPlayer.java
+// Trong AIPlayer.java, trong hàm update
+    // Trong AIPlayer.java, trong hàm update
     @Override
     public void update(Game game) {
         if (!alive) {
@@ -32,7 +40,9 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
             return;
         }
         ticksUntilMove--;
-        if (ticksUntilMove <= 0) {
+        if (ticksUntilMove <= 0 && !isExecuting) {
+            isExecuting = true;
+            System.out.println("AIPlayer bắt đầu cập nhật...");
             scanForHazards(game, 3);  // Tầm nhìn trong bán kính 3 ô
             predictBombs(game);
             predictPlayerActions(game);
@@ -40,15 +50,66 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
             // Lưu trạng thái hiện tại để học hỏi
             recordState(game);
 
+            // Cập nhật chiến lược dựa trên lịch sử trạng thái
+            updateStrategy();
+
+            // Đặt lại ticksUntilMove trước khi khởi tạo AIWorker
+            ticksUntilMove = moveDelay;
+
+            // Kiểm tra xem AI có bị dồn vào ngõ cụt không
+            if (isCornered(this, game.getGameMap())) {
+                escapeAttempts++;
+                System.out.println("AIPlayer đang bị dồn vào ngõ cụt, cố gắng thoát lần " + escapeAttempts);
+                if (escapeAttempts >= MAX_ESCAPE_ATTEMPTS) {
+                    System.out.println("AIPlayer đã cố gắng thoát nhiều lần, chuyển sang chiến lược Minimax.");
+                    setMovementStrategy(new MinimaxStrategy(7, true));
+                    escapeAttempts = 0;
+                } else {
+                    setMovementStrategy(new EscapeBombsStrategy(game.getGameMap()));
+                }
+            } else {
+                setMovementStrategy(new MinimaxStrategy(7, true)); // Hoặc chiến lược hiện tại
+                escapeAttempts = 0;
+            }
+
             // Sử dụng AIWorker để thực hiện di chuyển
             AIWorker aiWorker = new AIWorker(this, game);
             aiWorker.execute();
+            System.out.println("AIWorker đã được gọi để thực hiện di chuyển.");
         }
     }
 
+
+    private boolean isCornered(AIPlayer aiPlayer, GameMap map) {
+        int x = aiPlayer.getX();
+        int y = aiPlayer.getY();
+        int walkable = 0;
+        int[][] directions = {
+                {0, -1}, // Lên
+                {0, 1},  // Xuống
+                {-1, 0}, // Trái
+                {1, 0}   // Phải
+        };
+        for (int[] dir : directions) {
+            int newX = x + dir[0];
+            int newY = y + dir[1];
+            if (map.isWalkable(newX, newY)) {
+                walkable++;
+            }
+        }
+        return walkable <= 1; // Nếu có ít hơn hoặc bằng 1 hướng đi, coi như bị dồn vào ngõ cụt
+    }
+
+
+
+    public void setExecuting(boolean executing) {
+        this.isExecuting = executing;
+    }
+
+
     @Override
     protected int getExplosionRange() {
-        return 0;
+        return explosionRange; // Trả về phạm vi nổ thực tế
     }
 
     // Dự đoán hành động của người chơi
@@ -109,6 +170,9 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
     public void updateStrategy() {
         // Giả sử bạn sử dụng thuật toán học máy để tối ưu chiến lược
         // Cập nhật chiến lược dựa trên lịch sử trạng thái
+        System.out.println("Cập nhật chiến lược dựa trên lịch sử trạng thái.");
+        // Ở đây, bạn có thể thêm mã để phân tích stateHistory và điều chỉnh movementStrategy
+        // Ví dụ: sử dụng dữ liệu để thay đổi MovementStrategy hoặc cải thiện thuật toán Minimax
     }
 
     public List<int[]> getVisibleArea(int radius) {
@@ -159,5 +223,5 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
     // Phương thức để lấy chiến lược di chuyển
     public MovementStrategy getMovementStrategy() {
         return movementStrategy;
-     }
+    }
 }
