@@ -1,4 +1,5 @@
 
+
 package ai;
 
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class GameMap implements Cloneable {
     }
 
     /**
-     * Khởi tạo bản đồ với tường không phá hủy, tường phá hủy và ô trống 
+     * Khởi tạo bản đồ với tường không phá hủy, tường phá hủy và ô trống
      */
     private void initializeMap() {
         // Khởi tạo toàn bộ bản đồ là ô trống
@@ -55,14 +56,14 @@ public class GameMap implements Cloneable {
     }
 
     /**
-     * Kiểm tra xem một vị trí có nằm trong khu vực khởi đầu không 
+     * Kiểm tra xem một vị trí có nằm trong khu vực khởi đầu không
      */
     private boolean isWithinStartArea(int x, int y) {
         return (x >= 8 && x <= 12) && (y >= 8 && y <= 12);
     }
 
     /**
-     * Đặt các tường phá hủy ngẫu nhiên trên bản đồ 
+     * Đặt các tường phá hủy ngẫu nhiên trên bản đồ
      */
     private void placeRandomDestructibleWalls(int count) {
         Random rand = new Random();
@@ -78,7 +79,7 @@ public class GameMap implements Cloneable {
     }
 
     /**
-     * Đặt các vật phẩm ngẫu nhiên trên bản đồ 
+     * Đặt các vật phẩm ngẫu nhiên trên bản đồ
      */
     private void placeRandomItems(int count) {
         Random rand = new Random();
@@ -95,7 +96,7 @@ public class GameMap implements Cloneable {
     }
 
     /**
-     * Kiểm tra xem có vật phẩm tại vị trí (x, y) không 
+     * Kiểm tra xem có vật phẩm tại vị trí (x, y) không
      */
     public boolean isItemAt(int x, int y) {
         for (Item item : items) {
@@ -107,21 +108,21 @@ public class GameMap implements Cloneable {
     }
 
     /**
-     * Lấy danh sách vật phẩm 
+     * Lấy danh sách vật phẩm
      */
     public List<Item> getItems() {
         return items;
     }
 
     /**
-     * Xóa vật phẩm khỏi bản đồ 
+     * Xóa vật phẩm khỏi bản đồ
      */
     public void removeItem(Item item) {
         items.remove(item);
     }
 
     /**
-     * Trả về ký tự tại vị trí (x, y) 
+     * Trả về ký tự tại vị trí (x, y)
      */
     public char getTile(int x, int y) {
         if (x < 0 || x >= width || y < 0 || y >= height) {
@@ -131,7 +132,7 @@ public class GameMap implements Cloneable {
     }
 
     /**
-     * Đặt ký tự tại vị trí (x, y) 
+     * Đặt ký tự tại vị trí (x, y)
      */
     public void setTile(int x, int y, char tile) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
@@ -140,7 +141,7 @@ public class GameMap implements Cloneable {
     }
 
     /**
-     * Kiểm tra xem một ô có thể đi qua được không 
+     * Kiểm tra xem một ô có thể đi qua được không
      */
     public boolean isWalkable(int x, int y) {
         char tile = getTile(x, y);

@@ -1,3 +1,4 @@
+
 package ai;
 
 import java.util.*;
@@ -200,3 +201,4 @@ public class Pathfinding {
         }
     }
 }
+// Trong Pathfinding.java, trong hàm heuristic

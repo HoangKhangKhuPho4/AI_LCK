@@ -1,3 +1,4 @@
+
 package ai;
 
 import java.util.*;
@@ -30,54 +31,22 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
     private final int MAX_ESCAPE_ATTEMPTS = 3;
 
 
-    // Trong AIPlayer.java
-// Trong AIPlayer.java, trong hàm update
-    // Trong AIPlayer.java, trong hàm update
     @Override
     public void update(Game game) {
         if (!alive) {
             System.out.println(this.getClass().getSimpleName() + " không còn sống.");
             return;
         }
-        ticksUntilMove--;
-        if (ticksUntilMove <= 0 && !isExecuting) {
+        if (!isExecuting) {
             isExecuting = true;
             System.out.println("AIPlayer bắt đầu cập nhật...");
-            scanForHazards(game, 3);  // Tầm nhìn trong bán kính 3 ô
-            predictBombs(game);
-            predictPlayerActions(game);
-
-            // Lưu trạng thái hiện tại để học hỏi
-            recordState(game);
-
-            // Cập nhật chiến lược dựa trên lịch sử trạng thái
-            updateStrategy();
-
-            // Đặt lại ticksUntilMove trước khi khởi tạo AIWorker
-            ticksUntilMove = moveDelay;
-
-            // Kiểm tra xem AI có bị dồn vào ngõ cụt không
-            if (isCornered(this, game.getGameMap())) {
-                escapeAttempts++;
-                System.out.println("AIPlayer đang bị dồn vào ngõ cụt, cố gắng thoát lần " + escapeAttempts);
-                if (escapeAttempts >= MAX_ESCAPE_ATTEMPTS) {
-                    System.out.println("AIPlayer đã cố gắng thoát nhiều lần, chuyển sang chiến lược Minimax.");
-                    setMovementStrategy(new MinimaxStrategy(7, true));
-                    escapeAttempts = 0;
-                } else {
-                    setMovementStrategy(new EscapeBombsStrategy(game.getGameMap()));
-                }
-            } else {
-                setMovementStrategy(new MinimaxStrategy(7, true)); // Hoặc chiến lược hiện tại
-                escapeAttempts = 0;
-            }
-
-            // Sử dụng AIWorker để thực hiện di chuyển
+            // Các bước đi của AI như đã có
             AIWorker aiWorker = new AIWorker(this, game);
             aiWorker.execute();
             System.out.println("AIWorker đã được gọi để thực hiện di chuyển.");
         }
     }
+
 
 
     private boolean isCornered(AIPlayer aiPlayer, GameMap map) {

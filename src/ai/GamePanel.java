@@ -1,4 +1,3 @@
-// File: ai/GamePanel.java
 package ai;
 
 import javax.imageio.ImageIO;
@@ -7,10 +6,12 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Lớp đại diện cho panel vẽ trò chơi.
+ */
 public class GamePanel extends JPanel {
     private Game game;
     private final int TILE_SIZE = 40;
-
     // Images for walls, bombs, players, and items
     private Image wallIndestructibleImage;
     private Image wallDestructibleImage;
@@ -26,7 +27,6 @@ public class GamePanel extends JPanel {
         this.game = game;
         this.setPreferredSize(new Dimension(game.getGameMap().getWidth() * TILE_SIZE,
                 game.getGameMap().getHeight() * TILE_SIZE));
-
         // Load images for different wall types
         this.wallIndestructibleImage = loadImage("wallIndestructible.jpg");
         this.wallDestructibleImage = loadImage("wallDestructible.png");
@@ -34,18 +34,12 @@ public class GamePanel extends JPanel {
         this.playerImage = loadImage("player.jpg");
         this.aiPlayerImage = loadImage("ai_player.jpg");
         this.balloonImage = loadImage("ballon.jpg");
-
         // Load images for items
         this.speedItemImage = loadImage("speedItem.jpg"); // Hình ảnh vật phẩm tăng tốc
         this.explosionRangeItemImage = loadImage("explosionRangeItem.png"); // Hình ảnh vật phẩm tăng phạm vi nổ
-
         // Tải hiệu ứng nổ động từ tệp .gif
         this.explosionGif = loadGif("dFOsRT.gif");
-
-
     }
-
-
 
     private ImageIcon loadGif(String gifName) {
         try {
@@ -65,7 +59,6 @@ public class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-
         GameMap map = game.getGameMap();
         Player player = game.getPlayer();
         AIPlayer aiPlayer = game.getAiPlayer();
@@ -78,7 +71,6 @@ public class GamePanel extends JPanel {
                 char tile = map.getTile(x, y);
                 int xPos = x * TILE_SIZE;
                 int yPos = y * TILE_SIZE;
-
                 if (tile == '#') {
                     if (wallIndestructibleImage != null) {
                         g.drawImage(wallIndestructibleImage, xPos, yPos, TILE_SIZE, TILE_SIZE, this);
@@ -115,7 +107,6 @@ public class GamePanel extends JPanel {
         for (Bomb bomb : bombs) {
             int bombX = bomb.getX() * TILE_SIZE;
             int bombY = bomb.getY() * TILE_SIZE;
-
             if (bomb.isExploded()) {
                 // Kiểm tra nếu vị trí nổ trong phạm vi bản đồ
                 if (bombX >= 0 && bombX < map.getWidth() * TILE_SIZE && bombY >= 0 && bombY < map.getHeight() * TILE_SIZE) {
@@ -123,7 +114,6 @@ public class GamePanel extends JPanel {
                     if (explosionGif != null) {
                         g.drawImage(explosionGif.getImage(), bombX, bombY, TILE_SIZE, TILE_SIZE, this);
                     }
-
                     // Vẽ hiệu ứng nổ xung quanh (các ô ảnh hưởng của vụ nổ)
                     List<int[]> explosionTiles = game.getExplosionTiles(bomb);
                     for (int[] tile : explosionTiles) {
@@ -183,8 +173,6 @@ public class GamePanel extends JPanel {
             g.drawString(message, (getWidth() - msgWidth) / 2, (getHeight() + msgAscent) / 2);
         }
     }
-
-
 
     private Image loadImage(String imageName) {
         try {

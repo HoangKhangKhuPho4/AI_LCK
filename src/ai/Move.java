@@ -1,4 +1,5 @@
 
+
 package ai;
 
 public class Move {
@@ -15,4 +16,4 @@ public class Move {
     public ActionType getAction() {
         return action;
     }
-} 
+}

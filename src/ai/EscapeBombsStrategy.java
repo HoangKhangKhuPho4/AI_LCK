@@ -1,3 +1,4 @@
+
 package ai;
 
 import ai.*;
@@ -12,7 +13,7 @@ public class EscapeBombsStrategy implements MovementStrategy {
         this.pathfinding = new Pathfinding(map);
     }
 
-    // Trong EscapeBombsStrategy.java
+
 // Trong EscapeBombsStrategy.java
     @Override
     public void move(Entity entity, Game game) {

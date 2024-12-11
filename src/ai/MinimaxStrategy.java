@@ -20,6 +20,7 @@ public class MinimaxStrategy implements MovementStrategy {
 
     @Override
     public void move(Entity entity, Game game) {
+        System.out.println("MinimaxStrategy được gọi để tìm hành động...");
         // Clone the game state
         Game clonedGame = game.clone();
         // Get the best action using Minimax
@@ -37,7 +38,6 @@ public class MinimaxStrategy implements MovementStrategy {
             System.out.println("Minimax không tìm thấy hành động nào.");
         }
     }
-
 
     /**
      * Lớp nội bộ để lưu kết quả của Minimax.
@@ -121,8 +121,6 @@ public class MinimaxStrategy implements MovementStrategy {
     /**
      * Tạo danh sách các hành động có thể cho người chơi hoặc AI.
      */
-    // Trong MinimaxStrategy.java, trong hàm generatePossibleActions
-    // Trong MinimaxStrategy.java, trong hàm generatePossibleActions
     private List<Action> generatePossibleActions(Game state, boolean isMaximizingPlayer) {
         List<Action> actions = new ArrayList<>();
         // Thêm các hành động di chuyển
@@ -144,7 +142,6 @@ public class MinimaxStrategy implements MovementStrategy {
 
         return actions;
     }
-
 
     private List<int[]> getPotentialBombPositions(Game state) {
         List<int[]> positions = new ArrayList<>();
@@ -174,8 +171,6 @@ public class MinimaxStrategy implements MovementStrategy {
     /**
      * Hàm đánh giá trạng thái trò chơi.
      */
-    // Trong MinimaxStrategy.java
-// Trong MinimaxStrategy.java, trong hàm evaluateState
     private double evaluateState(Game state) {
         if (state.isGameWon()) {
             return 1000;
@@ -211,14 +206,13 @@ public class MinimaxStrategy implements MovementStrategy {
         }
 
         // Ưu tiên thu thập vật phẩm
+        double itemPriority = 0.0;
         for (Item item : state.getGameMap().getItems()) {
             int itemDistance = Math.abs(item.getX() - state.getAiPlayer().getX()) + Math.abs(item.getY() - state.getAiPlayer().getY());
-            if (item.getType() == Item.ItemType.SPEED) {
-                score += 30 / (itemDistance + 1);
-            } else if (item.getType() == Item.ItemType.EXPLOSION_RANGE) {
-                score += 40 / (itemDistance + 1);
-            }
+            if (itemDistance == 0) continue;
+            itemPriority += (item.getType() == Item.ItemType.SPEED) ? 1.0 / itemDistance : 1.5 / itemDistance;
         }
+        score += itemPriority * 20;
 
         // Đánh giá về Balloon
         for (Balloon balloon : state.getBalloons()) {
@@ -250,11 +244,7 @@ public class MinimaxStrategy implements MovementStrategy {
         int availableDirections = 0;
         int x = state.getAiPlayer().getX();
         int y = state.getAiPlayer().getY();
-        int[][] directions = {{0, -1}, // Lên
-                {0, 1},  // Xuống
-                {-1, 0}, // Trái
-                {1, 0}   // Phải
-        };
+        int[][] directions = getDirections();
         for (int[] dir : directions) {
             int newX = x + dir[0];
             int newY = y + dir[1];
@@ -266,7 +256,6 @@ public class MinimaxStrategy implements MovementStrategy {
 
         return score;
     }
-
 
     // Hàm kiểm tra xem AIPlayer có bị dồn vào ngõ cụt không
     private boolean isCornered(AIPlayer aiPlayer, GameMap map) {
@@ -288,11 +277,9 @@ public class MinimaxStrategy implements MovementStrategy {
         return walkable <= 1; // Nếu có ít hơn hoặc bằng 1 hướng đi, coi như bị dồn vào ngõ cụt
     }
 
-
     /**
      * Thực hiện hành động trên một thực thể trong trò chơi.
      */
-    // Trong MinimaxStrategy.java, trong hàm executeAction
     private void executeAction(Entity entity, Game game, Action action) {
         switch (action.getActionType()) {
             case MOVE_UP:
@@ -334,18 +321,110 @@ public class MinimaxStrategy implements MovementStrategy {
         }
     }
 
-
-    // Trong MinimaxStrategy.java
+    /**
+     * Kiểm tra xem AIPlayer có thể đặt bom một cách an toàn không.
+     */
     private boolean canPlaceBombSafely(Game game, Entity entity, int bombX, int bombY) {
         // Tạm thời đặt bom và kiểm tra xem AI còn đường thoát hay không
         Game clonedGame = game.clone();
-        clonedGame.placeBomb(entity); // Đặt bom trên bản sao
+        AIPlayer clonedAI = clonedGame.getAiPlayer();
+        clonedAI.setX(bombX);
+        clonedAI.setY(bombY);
+        clonedGame.placeBomb(clonedAI); // Đặt bom trên bản sao
         clonedGame.update(); // Cập nhật trạng thái sau khi đặt bom
 
         // Kiểm tra xem có lối thoát an toàn nào cho AI không
-        List<int[]> safePositions = new EscapeBombsStrategy(clonedGame.getGameMap()).findSafePositions(entity, clonedGame);
+        List<int[]> safePositions = new EscapeBombsStrategy(clonedGame.getGameMap()).findSafePositions(clonedAI, clonedGame);
         return !safePositions.isEmpty();
     }
 
+    // Hàm xây dựng đường đi từ Node
+    private List<int[]> constructPath(Node node) {
+        List<int[]> path = new ArrayList<>();
+        while (node.parent != null) {
+            path.add(new int[]{node.x, node.y});
+            node = node.parent;
+        }
+        Collections.reverse(path);
+        return path;
+    }
 
+    // Các hướng di chuyển: Lên, Xuống, Trái, Phải
+    private int[][] getDirections() {
+        return new int[][]{
+                {0, -1}, // Lên
+                {0, 1},  // Xuống
+                {-1, 0}, // Trái
+                {1, 0}   // Phải
+        };
+    }
+
+    /**
+     * Hàm đánh giá mức độ nguy hiểm tại vị trí (x, y)
+     */
+    private double dangerFactor(int x, int y, Game game) {
+        double danger = 0.0;
+
+        // Nguy hiểm từ bom
+        for (Bomb bomb : game.getBombs()) {
+            if (!bomb.isExploded()) {
+                int distance = Math.abs(bomb.getX() - x) + Math.abs(bomb.getY() - y);
+                if (distance <= bomb.getExplosionRange()) {
+                    double timeUntilExplosion = bomb.getCountdown() / 10.0;
+                    danger += (1.0 - ((double) distance / bomb.getExplosionRange())) / timeUntilExplosion;
+                }
+            }
+        }
+
+        // Nguy hiểm từ Balloon
+        for (Balloon balloon : game.getBalloons()) {
+            if (!balloon.isAlive()) continue;
+            int distance = Math.abs(balloon.getX() - x) + Math.abs(balloon.getY() - y);
+            if (distance == 0) {
+                danger += 1.0;
+            } else if (distance == 1) {
+                danger += 0.8;
+            } else if (distance == 2) {
+                danger += 0.5;
+            }
+        }
+
+        return Math.min(danger, 1.0); // Đảm bảo giá trị nguy hiểm không vượt quá 1.0
+    }
+
+    // Lớp Node nội bộ cho thuật toán A*
+    private static class Node {
+        int x, y;
+        Node parent;
+        double gScore = Double.MAX_VALUE;
+        double fScore = Double.MAX_VALUE;
+
+        Node(int x, int y, Node parent) {
+            this.x = x;
+            this.y = y;
+            this.parent = parent;
+        }
+
+        String key() {
+            return key(this.x, this.y);
+        }
+
+        static String key(int x, int y) {
+            return x + "," + y;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Node) {
+                Node other = (Node) obj;
+                return this.x == other.x && this.y == other.y;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(x, y);
+        }
+    }
 }

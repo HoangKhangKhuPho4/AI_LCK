@@ -3,6 +3,9 @@ package ai;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
+/**
+ * Lớp thực hiện di chuyển của AI trên luồng nền.
+ */
 public class AIWorker extends SwingWorker<Void, Void> {
     private AIPlayer aiPlayer;
     private Game game;
@@ -28,13 +31,10 @@ public class AIWorker extends SwingWorker<Void, Void> {
     @Override
     protected void done() {
         aiPlayer.setExecuting(false);
-        aiPlayer.ticksUntilMove = aiPlayer.moveDelay;
-        System.out.println(aiPlayer.getClass().getSimpleName() + " đã di chuyển đến (" + aiPlayer.getX() + ", " + aiPlayer.getY() + ").");
-        // Cập nhật giao diện trên luồng EDT
+        game.update(); // Cập nhật sau khi AI di chuyển
         SwingUtilities.invokeLater(() -> {
             // Thông báo cho các observer nếu cần
             aiPlayer.notifyObservers(new AIPlayerMovedEvent(aiPlayer.getX(), aiPlayer.getY()));
         });
     }
-
 }

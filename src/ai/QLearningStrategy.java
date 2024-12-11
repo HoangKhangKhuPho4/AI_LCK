@@ -1,3 +1,4 @@
+
 package ai;
 
 import ai.Entity;
@@ -19,12 +20,23 @@ public class QLearningStrategy implements MovementStrategy {
         qTable = new HashMap<>();
     }
 
+//    @Override
+//    public void move(Entity entity, Game game) {
+//        String state = getStateKey(entity, game);
+//        ActionType action = chooseAction(state);
+//        executeAction(entity, game, action);
+//        // Sau khi thực hiện hành động, cập nhật Q-table
+//        String newState = getStateKey(entity, game);
+//        double reward = evaluateReward(entity, game);
+//        updateQTable(state, action, reward, newState);
+//    }
+
+
     @Override
     public void move(Entity entity, Game game) {
         String state = getStateKey(entity, game);
         ActionType action = chooseAction(state);
         executeAction(entity, game, action);
-        // Sau khi thực hiện hành động, cập nhật Q-table
         String newState = getStateKey(entity, game);
         double reward = evaluateReward(entity, game);
         updateQTable(state, action, reward, newState);
