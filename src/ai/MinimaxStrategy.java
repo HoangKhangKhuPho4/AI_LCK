@@ -1,3 +1,4 @@
+
 package ai;
 
 import java.util.*;
@@ -18,109 +19,167 @@ public class MinimaxStrategy implements MovementStrategy {
         this.transpositionTable = new HashMap<>();
     }
 
-    @Override
-    public void move(Entity entity, Game game) {
-        System.out.println("MinimaxStrategy được gọi để tìm hành động...");
-        // Clone the game state
-        Game clonedGame = game.clone();
-        // Get the best action using Minimax
-        MinimaxResult result = minimax(clonedGame, maxDepth, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, isMaximizingPlayer);
-        Action bestAction = result.action;
 
-        if (bestAction != null) {
-            System.out.println("Minimax chọn hành động: " + bestAction.getActionType());
-            if (bestAction.getActionType() == ActionType.PLACE_BOMB) {
-                System.out.println("AI sẽ đặt bom tại (" + bestAction.getTargetX() + ", " + bestAction.getTargetY() + ").");
-            }
-            // Thực hiện hành động tốt nhất trên thực thể thực tế
-            executeAction(entity, game, bestAction);
-        } else {
-            System.out.println("Minimax không tìm thấy hành động nào.");
-        }
-    }
+
 
     /**
      * Lớp nội bộ để lưu kết quả của Minimax.
      */
-    private class MinimaxResult {
-        Action action;
-        double score;
-
-        MinimaxResult(Action action, double score) {
-            this.action = action;
-            this.score = score;
-        }
-    }
+//    private class MinimaxResult {
+//        Action action;
+//        double score;
+//
+//        MinimaxResult(Action action, double score) {
+//            this.action = action;
+//            this.score = score;
+//        }
+//    }
 
     /**
      * Thuật toán Minimax với Alpha-Beta Pruning và Transposition Table.
      */
-    private MinimaxResult minimax(Game state, int depth, double alpha, double beta, boolean maximizingPlayer) {
-        // Kiểm tra trong Transposition Table trước
-        String stateKey = state.getStateHash();
-        if (transpositionTable.containsKey(stateKey)) {
-            double cachedValue = transpositionTable.get(stateKey);
-            return new MinimaxResult(null, cachedValue); // Trả về giá trị đã lưu
+    public int minimax(boolean maxmin, Node state, int depth, int alpha, int beta) {
+        // Điều kiện dừng đệ quy
+        if (depth == 0 || isOver(state)) {
+            return heuristic(state);
         }
 
-        if (depth == 0 || state.isGameOver() || state.isGameWon()) {
-            double eval = evaluateState(state);
-            // Lưu kết quả vào Transposition Table
-            transpositionTable.put(stateKey, eval);
-            return new MinimaxResult(null, eval);
-        }
-
-        List<Action> possibleActions = generatePossibleActions(state, maximizingPlayer);
-        Action bestAction = null;
-
-        if (maximizingPlayer) {
-            double maxEval = Double.NEGATIVE_INFINITY;
-            for (Action action : possibleActions) {
-                Game clonedState = state.clone();
-                Entity currentEntity = clonedState.getAiPlayer(); // Đúng: AIPlayer là người tối đa hóa
-                executeAction(currentEntity, clonedState, action);
-                clonedState.update();
-                MinimaxResult result = minimax(clonedState, depth - 1, alpha, beta, false);
-                double eval = result.score;
-                if (eval > maxEval) {
-                    maxEval = eval;
-                    bestAction = action;
-                }
-                alpha = Math.max(alpha, eval);
-                if (beta <= alpha) {
-                    break; // Beta cut-off
+        if (maxmin) { // Người chơi tối đa
+            int temp = Integer.MIN_VALUE; // Sử dụng Integer.MIN_VALUE thay vì -999999999
+            for (Node child : generateChildren(state)) { // Tạo danh sách node con
+                int value = minimax(false, child, depth - 1, alpha, beta);
+                temp = Math.max(temp, value);
+                alpha = Math.max(alpha, temp);
+                if (alpha >= beta) {
+                    // Cắt tỉa nhánh không cần thiết
+                    break;
                 }
             }
-            // Lưu kết quả vào Transposition Table
-            transpositionTable.put(stateKey, maxEval);
-            return new MinimaxResult(bestAction, maxEval);
-        } else {
-            double minEval = Double.POSITIVE_INFINITY;
-            for (Action action : possibleActions) {
-                Game clonedState = state.clone();
-                Entity currentEntity = clonedState.getPlayer(); // Người chơi là người tối thiểu hóa
-                executeAction(currentEntity, clonedState, action);
-                clonedState.update();
-                MinimaxResult result = minimax(clonedState, depth - 1, alpha, beta, true);
-                double eval = result.score;
-                if (eval < minEval) {
-                    minEval = eval;
-                    bestAction = action;
-                }
-                beta = Math.min(beta, eval);
-                if (beta <= alpha) {
-                    break; // Alpha cut-off
+            return temp;
+        } else { // Người chơi tối thiểu
+            int temp = Integer.MAX_VALUE; // Sử dụng Integer.MAX_VALUE thay vì 999999999
+            for (Node child : generateChildren(state)) { // Tạo danh sách node con
+                int value = minimax(true, child, depth - 1, alpha, beta);
+                temp = Math.min(temp, value);
+                beta = Math.min(beta, temp);
+                if (alpha >= beta) {
+                    // Cắt tỉa nhánh không cần thiết
+                    break;
                 }
             }
-            // Lưu kết quả vào Transposition Table
-            transpositionTable.put(stateKey, minEval);
-            return new MinimaxResult(bestAction, minEval);
+            return temp;
         }
     }
+
+    private boolean isOver(Node state) {
+        // Kiểm tra điều kiện kết thúc trò chơi, ví dụ:
+        // - Kiểm tra nếu một trong hai người chơi đã thắng hoặc thua.
+        // - Kiểm tra nếu không còn nước đi hợp lệ nào.
+        // Bạn có thể điều chỉnh tùy theo luật của trò chơi.
+
+        Game game = state.getGame();  // Giả sử bạn có thể lấy Game từ Node
+
+        // Kiểm tra nếu một trong hai người chơi đã thua (ví dụ: AIPlayer hoặc Player)
+        if (game.isGameWon()) {
+            return true;  // Trò chơi đã thắng
+        }
+
+        if (game.isGameOver()) {
+            return true;  // Trò chơi kết thúc do các lý do khác (ví dụ: không còn đường đi hợp lệ hoặc bom đã nổ)
+        }
+
+        // Kiểm tra các điều kiện khác nếu cần, ví dụ như xem AI hay Player có bị kẹt trong một góc hay không
+        return false;
+    }
+
+
+
+    public List<Node> generateChildren(Node state) {
+        List<Node> children = new ArrayList<>();
+        int aiX = state.getAIPlayerX();
+        int aiY = state.getAIPlayerY();
+
+        // Các hướng di chuyển có thể: lên, xuống, trái, phải
+        int[][] directions = {
+                {0, -1}, // Lên
+                {0, 1},  // Xuống
+                {-1, 0}, // Trái
+                {1, 0}   // Phải
+        };
+
+        for (int[] dir : directions) {
+            int newX = aiX + dir[0];
+            int newY = aiY + dir[1];
+
+            // Kiểm tra xem ô mới có hợp lệ không
+            if (state.isValidMove(newX, newY)) {
+                // Tạo trạng thái mới và thêm vào danh sách con
+                Node childState = new Node(newX, newY, state.getPlayerX(), state.getPlayerY(), state.getBombCount(), state.getGameMap());
+                children.add(childState);
+            }
+        }
+
+        return children;
+    }
+
+
+    private boolean isValidMove(int x, int y, Node state) {
+        // Kiểm tra xem ô (x, y) có hợp lệ không (không phải tường hoặc ngoài bản đồ)
+        // Giả sử giá trị 0 là ô trống và các giá trị khác là tường/chướng ngại vật
+        return x >= 0 && x < state.getGameMap().length &&
+                y >= 0 && y < state.getGameMap()[0].length &&
+                state.getGameMap()[x][y] == 0; // 0 là ô trống
+    }
+
+
+
+
+    private int heuristic(Node state) {
+        int aiX = state.getAIPlayerX();
+        int aiY = state.getAIPlayerY();
+        int playerX = state.getPlayerX();
+        int playerY = state.getPlayerY();
+
+        // Tính toán khoảng cách Manhattan giữa AI và người chơi
+        int distanceToPlayer = Math.abs(aiX - playerX) + Math.abs(aiY - playerY);
+
+        // Nếu AI ở gần người chơi, trả về giá trị âm (AI có nguy cơ)
+        if (distanceToPlayer < 3) {
+            return -100 + distanceToPlayer; // Giá trị âm lớn hơn nếu gần người chơi
+        }
+
+        // Nếu AI có thể đặt bom và gây nổ gần người chơi
+        if (canPlaceBombNearPlayer(state)) {
+            return 100; // Giá trị dương nếu có cơ hội tấn công
+        }
+
+        // Trả về giá trị dựa trên khoảng cách an toàn từ bom hoặc các mối nguy hiểm khác
+        return distanceToPlayer; // Giá trị trung bình dựa trên khoảng cách an toàn
+    }
+
+    private boolean canPlaceBombNearPlayer(Node state) {
+        // Lấy vị trí người chơi
+        int playerX = state.getPlayerX();
+        int playerY = state.getPlayerY();
+
+        // Kiểm tra các ô xung quanh người chơi
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                if ((dx != 0 || dy != 0) && isValidMove(playerX + dx, playerY + dy, state)) {
+                    return true; // Có thể đặt bom ở vị trí này
+                }
+            }
+        }
+
+        return false; // Không thể đặt bom gần người chơi
+    }
+
 
     /**
      * Tạo danh sách các hành động có thể cho người chơi hoặc AI.
      */
+    // Trong MinimaxStrategy.java, trong hàm generatePossibleActions
+    // Trong MinimaxStrategy.java, trong hàm generatePossibleActions
     private List<Action> generatePossibleActions(Game state, boolean isMaximizingPlayer) {
         List<Action> actions = new ArrayList<>();
         // Thêm các hành động di chuyển
@@ -142,6 +201,7 @@ public class MinimaxStrategy implements MovementStrategy {
 
         return actions;
     }
+
 
     private List<int[]> getPotentialBombPositions(Game state) {
         List<int[]> positions = new ArrayList<>();
@@ -171,6 +231,8 @@ public class MinimaxStrategy implements MovementStrategy {
     /**
      * Hàm đánh giá trạng thái trò chơi.
      */
+    // Trong MinimaxStrategy.java
+// Trong MinimaxStrategy.java, trong hàm evaluateState
     private double evaluateState(Game state) {
         if (state.isGameWon()) {
             return 1000;
@@ -206,13 +268,14 @@ public class MinimaxStrategy implements MovementStrategy {
         }
 
         // Ưu tiên thu thập vật phẩm
-        double itemPriority = 0.0;
         for (Item item : state.getGameMap().getItems()) {
             int itemDistance = Math.abs(item.getX() - state.getAiPlayer().getX()) + Math.abs(item.getY() - state.getAiPlayer().getY());
-            if (itemDistance == 0) continue;
-            itemPriority += (item.getType() == Item.ItemType.SPEED) ? 1.0 / itemDistance : 1.5 / itemDistance;
+            if (item.getType() == Item.ItemType.SPEED) {
+                score += 30 / (itemDistance + 1);
+            } else if (item.getType() == Item.ItemType.EXPLOSION_RANGE) {
+                score += 40 / (itemDistance + 1);
+            }
         }
-        score += itemPriority * 20;
 
         // Đánh giá về Balloon
         for (Balloon balloon : state.getBalloons()) {
@@ -244,7 +307,11 @@ public class MinimaxStrategy implements MovementStrategy {
         int availableDirections = 0;
         int x = state.getAiPlayer().getX();
         int y = state.getAiPlayer().getY();
-        int[][] directions = getDirections();
+        int[][] directions = {{0, -1}, // Lên
+                {0, 1},  // Xuống
+                {-1, 0}, // Trái
+                {1, 0}   // Phải
+        };
         for (int[] dir : directions) {
             int newX = x + dir[0];
             int newY = y + dir[1];
@@ -256,6 +323,7 @@ public class MinimaxStrategy implements MovementStrategy {
 
         return score;
     }
+
 
     // Hàm kiểm tra xem AIPlayer có bị dồn vào ngõ cụt không
     private boolean isCornered(AIPlayer aiPlayer, GameMap map) {
@@ -277,9 +345,11 @@ public class MinimaxStrategy implements MovementStrategy {
         return walkable <= 1; // Nếu có ít hơn hoặc bằng 1 hướng đi, coi như bị dồn vào ngõ cụt
     }
 
+
     /**
      * Thực hiện hành động trên một thực thể trong trò chơi.
      */
+    // Trong MinimaxStrategy.java, trong hàm executeAction
     private void executeAction(Entity entity, Game game, Action action) {
         switch (action.getActionType()) {
             case MOVE_UP:
@@ -321,110 +391,22 @@ public class MinimaxStrategy implements MovementStrategy {
         }
     }
 
-    /**
-     * Kiểm tra xem AIPlayer có thể đặt bom một cách an toàn không.
-     */
+
+    // Trong MinimaxStrategy.java
     private boolean canPlaceBombSafely(Game game, Entity entity, int bombX, int bombY) {
         // Tạm thời đặt bom và kiểm tra xem AI còn đường thoát hay không
         Game clonedGame = game.clone();
-        AIPlayer clonedAI = clonedGame.getAiPlayer();
-        clonedAI.setX(bombX);
-        clonedAI.setY(bombY);
-        clonedGame.placeBomb(clonedAI); // Đặt bom trên bản sao
+        clonedGame.placeBomb(entity); // Đặt bom trên bản sao
         clonedGame.update(); // Cập nhật trạng thái sau khi đặt bom
 
         // Kiểm tra xem có lối thoát an toàn nào cho AI không
-        List<int[]> safePositions = new EscapeBombsStrategy(clonedGame.getGameMap()).findSafePositions(clonedAI, clonedGame);
+        List<int[]> safePositions = new EscapeBombsStrategy(clonedGame.getGameMap()).findSafePositions(entity, clonedGame);
         return !safePositions.isEmpty();
     }
 
-    // Hàm xây dựng đường đi từ Node
-    private List<int[]> constructPath(Node node) {
-        List<int[]> path = new ArrayList<>();
-        while (node.parent != null) {
-            path.add(new int[]{node.x, node.y});
-            node = node.parent;
-        }
-        Collections.reverse(path);
-        return path;
-    }
 
-    // Các hướng di chuyển: Lên, Xuống, Trái, Phải
-    private int[][] getDirections() {
-        return new int[][]{
-                {0, -1}, // Lên
-                {0, 1},  // Xuống
-                {-1, 0}, // Trái
-                {1, 0}   // Phải
-        };
-    }
+    @Override
+    public void move(Entity entity, Game game) {
 
-    /**
-     * Hàm đánh giá mức độ nguy hiểm tại vị trí (x, y)
-     */
-    private double dangerFactor(int x, int y, Game game) {
-        double danger = 0.0;
-
-        // Nguy hiểm từ bom
-        for (Bomb bomb : game.getBombs()) {
-            if (!bomb.isExploded()) {
-                int distance = Math.abs(bomb.getX() - x) + Math.abs(bomb.getY() - y);
-                if (distance <= bomb.getExplosionRange()) {
-                    double timeUntilExplosion = bomb.getCountdown() / 10.0;
-                    danger += (1.0 - ((double) distance / bomb.getExplosionRange())) / timeUntilExplosion;
-                }
-            }
-        }
-
-        // Nguy hiểm từ Balloon
-        for (Balloon balloon : game.getBalloons()) {
-            if (!balloon.isAlive()) continue;
-            int distance = Math.abs(balloon.getX() - x) + Math.abs(balloon.getY() - y);
-            if (distance == 0) {
-                danger += 1.0;
-            } else if (distance == 1) {
-                danger += 0.8;
-            } else if (distance == 2) {
-                danger += 0.5;
-            }
-        }
-
-        return Math.min(danger, 1.0); // Đảm bảo giá trị nguy hiểm không vượt quá 1.0
-    }
-
-    // Lớp Node nội bộ cho thuật toán A*
-    private static class Node {
-        int x, y;
-        Node parent;
-        double gScore = Double.MAX_VALUE;
-        double fScore = Double.MAX_VALUE;
-
-        Node(int x, int y, Node parent) {
-            this.x = x;
-            this.y = y;
-            this.parent = parent;
-        }
-
-        String key() {
-            return key(this.x, this.y);
-        }
-
-        static String key(int x, int y) {
-            return x + "," + y;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof Node) {
-                Node other = (Node) obj;
-                return this.x == other.x && this.y == other.y;
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(x, y);
-        }
     }
 }

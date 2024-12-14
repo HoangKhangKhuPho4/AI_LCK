@@ -1,4 +1,3 @@
-
 package ai;
 
 import java.util.*;
@@ -15,7 +14,7 @@ public class Pathfinding {
 
     /**
      * Tìm đường đi an toàn từ (startX, startY) đến (goalX, goalY)
-     * Tránh các vùng có bom đang sắp nổ hoặc đã đặt bom gần đó và tránh Balloon
+     * Tránh các vùng có bom đang sắp nổ hoặc đã đặt bom gần đó và tránh Balloon.
      *
      * @param startX Tọa độ X bắt đầu
      * @param startY Tọa độ Y bắt đầu
@@ -30,7 +29,7 @@ public class Pathfinding {
 
         Node start = new Node(startX, startY, null);
         start.gScore = 0;
-        start.fScore = heuristic(startX, startY, goalX, goalY, game);
+        start.fScore = heuristicForPathfinding(startX, startY, goalX, goalY, game);  // Sử dụng hàm heuristic mới
         openSet.add(start);
         allNodes.put(start.key(), start);
 
@@ -57,7 +56,7 @@ public class Pathfinding {
                 if (tentativeGScore < neighbor.gScore) {
                     neighbor.parent = current;
                     neighbor.gScore = tentativeGScore;
-                    neighbor.fScore = neighbor.gScore + heuristic(newX, newY, goalX, goalY, game) + danger;
+                    neighbor.fScore = neighbor.gScore + heuristicForPathfinding(newX, newY, goalX, goalY, game) + danger;
                     if (!openSet.contains(neighbor)) {
                         openSet.add(neighbor);
                     }
@@ -75,42 +74,17 @@ public class Pathfinding {
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
 
-    // Hàm heuristic cho thuật toán A*
-    // Trong Pathfinding.java, trong hàm heuristic
-// Trong Pathfinding.java, trong hàm heuristic
-    private double heuristic(int x, int y, int goalX, int goalY, Game game) {
-        double distance = Math.abs(goalX - x) + Math.abs(goalY - y);
-        double danger = dangerFactor(x, y, game);
-        double itemPriority = 0.0;
+    // Hàm heuristic cho thuật toán A* tính toán khoảng cách và mức độ nguy hiểm
+    private double heuristicForPathfinding(int startX, int startY, int goalX, int goalY, Game game) {
+        // Tính toán khoảng cách Manhattan giữa điểm bắt đầu và điểm đích
+        double distanceToGoal = distance(startX, startY, goalX, goalY);
 
-        for (Item item : game.getGameMap().getItems()) {
-            int itemDistance = Math.abs(item.getX() - x) + Math.abs(item.getY() - y);
-            if (itemDistance == 0) continue;
-            itemPriority += (item.getType() == Item.ItemType.SPEED) ? 1.0 / itemDistance : 1.5 / itemDistance;
-        }
+        // Tính mức độ nguy hiểm từ các yếu tố trong game (bom, Balloon, v.v.)
+        double danger = dangerFactor(startX, startY, game);
 
-        // Tính số hướng đi từ vị trí hiện tại
-        int availableDirections = 0;
-        int[][] directions = getDirections();
-        for (int[] dir : directions) {
-            int newX = x + dir[0];
-            int newY = y + dir[1];
-            if (map.isWalkable(newX, newY)) {
-                availableDirections++;
-            }
-        }
-
-        // **Thêm yếu tố ngẫu nhiên để tránh ưu tiên hướng cố định**
-        double randomness = new Random().nextDouble() * 5; // Giá trị ngẫu nhiên từ 0 đến 5
-
-        // Tính toán giá trị heuristic cuối cùng
-        double heuristicValue = distance + danger * 5 - itemPriority * 3 - availableDirections * 2 + randomness;
-        return heuristicValue;
+        // Trả về tổng hợp của khoảng cách và mức độ nguy hiểm
+        return distanceToGoal + danger;
     }
-
-
-
-
 
     // Hàm đánh giá mức độ nguy hiểm tại vị trí (x, y)
     private double dangerFactor(int x, int y, Game game) {
@@ -164,7 +138,6 @@ public class Pathfinding {
         };
     }
 
-
     // Lớp Node nội bộ cho thuật toán A*
     private static class Node {
         int x, y;
@@ -200,5 +173,11 @@ public class Pathfinding {
             return Objects.hash(x, y);
         }
     }
+
+    // Hàm đánh giá mức độ nguy hiểm từ bom, Balloon (giữ lại nếu cần thiết cho Minimax)
+    private boolean canPlaceBombNearPlayer(Node state) {
+        // Kiểm tra xem AI có thể đặt bom gần vị trí của người chơi không
+        // Logic kiểm tra vị trí xung quanh người chơi và xem có thể đặt bom hay không.
+        return false; // Placeholder: Cần thực hiện logic cụ thể cho việc kiểm tra bom
+    }
 }
-// Trong Pathfinding.java, trong hàm heuristic

@@ -47,4 +47,18 @@ public class Player extends Entity implements Cloneable {
     public int getExplosionRange() {
         return explosionRange;
     }
+
+    // Phương thức để thiết lập số lượng bom
+    public void setBombCount(int count) {
+        if (count >= 0) {  // Kiểm tra nếu count không âm
+            this.bombCount = count;
+        } else {
+            System.out.println("Số lượng bom không hợp lệ. Giá trị phải lớn hơn hoặc bằng 0.");
+        }
+    }
+
+    // Phương thức để lấy số lượng bom hiện tại
+    public int getBombCount() {
+        return bombCount;
+    }
 }

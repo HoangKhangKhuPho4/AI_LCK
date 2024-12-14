@@ -184,4 +184,45 @@ public class GameMap implements Cloneable {
         return x >= 0 && x < width && y >= 0 && y < height && isWalkable(x, y);
     }
 
+    public void setMap(int[][] gameMapData) {
+        // Kiểm tra nếu dữ liệu bản đồ hợp lệ
+        if (gameMapData == null || gameMapData.length != height || gameMapData[0].length != width) {
+            System.out.println("Dữ liệu bản đồ không hợp lệ.");
+            return;
+        }
+
+        // Cập nhật bản đồ với dữ liệu từ gameMapData
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                // Chuyển đổi giá trị từ gameMapData sang ký tự tương ứng
+                switch (gameMapData[i][j]) {
+                    case 0: // Ô trống
+                        map[i][j] = ' ';
+                        break;
+                    case 1: // Tường không thể phá hủy
+                        map[i][j] = '#';
+                        break;
+                    case 2: // Tường có thể phá hủy
+                        map[i][j] = 'D';
+                        break;
+                    default:
+                        map[i][j] = ' '; // Mặc định là ô trống
+                }
+            }
+        }
+
+        // Sau khi cập nhật bản đồ, xóa các vật phẩm cũ và thêm lại các vật phẩm mới từ dữ liệu bản đồ
+        items.clear(); // Xóa các vật phẩm cũ
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                if (map[i][j] == ' ' && !isItemAt(i, j) && !isWithinStartArea(i, j)) {
+                    // Đặt vật phẩm ngẫu nhiên (chỉ ở ô trống)
+                    Random rand = new Random();
+                    Item.ItemType type = rand.nextBoolean() ? Item.ItemType.SPEED : Item.ItemType.EXPLOSION_RANGE;
+                    items.add(new Item(i, j, type));
+                }
+            }
+        }
+    }
+
 }

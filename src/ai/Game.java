@@ -1,8 +1,7 @@
+
 package ai;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Lớp đại diện cho trò chơi Bomberman.
@@ -17,9 +16,6 @@ public class Game implements Cloneable {
     private boolean gameWon;
     private Random rand;
     private int level;
-
-    // Biến để xác định lượt hiện tại: true - người chơi, false - AI
-    private boolean isPlayerTurn = true;
 
     public Game() {
         gameMap = new GameMap(20, 20);
@@ -36,9 +32,15 @@ public class Game implements Cloneable {
     }
 
     private void initializeAIPlayer() {
-        // Sử dụng MinimaxStrategy với độ sâu 7, là Maximizing Player
-        MovementStrategy aiStrategy = new MinimaxStrategy(7, true);
-        aiPlayer = new AIPlayer(5, 5, aiStrategy, this);
+        // Sử dụng MinimaxStrategy với độ sâu 2, là Maximizing Player
+        MovementStrategy aiStrategy = new MinimaxStrategy(7, true); // Đổi từ false thành true
+        aiPlayer = new AIPlayer(5, 5, aiStrategy, this);  // Truyền đối tượng game (this) vào
+    }
+
+
+    public boolean isOver() {
+        // Kiểm tra xem người chơi hoặc AIPlayer có còn sống không
+        return !player.isAlive() || !aiPlayer.isAlive();
     }
 
     private void initializeBalloons(int count) {
@@ -75,15 +77,8 @@ public class Game implements Cloneable {
         System.out.println(count + " Balloon đã được khởi tạo.");
     }
 
-
-    // Trong Game.java
-    public boolean isPlayerTurn() {
-        return isPlayerTurn;
-    }
-
     /**
      * Đặt bom cho một thực thể cụ thể.
-     *
      * @param entity Thực thể đặt bom.
      */
     public void placeBomb(Entity entity) {
@@ -101,12 +96,15 @@ public class Game implements Cloneable {
         }
     }
 
+
+
+
     /**
      * Cập nhật trạng thái trò chơi.
-     * Phương thức này được gọi sau mỗi lượt đi của người chơi hoặc AI.
      */
     public void update() {
         if (gameOver || gameWon) return;
+
         // Cập nhật bom
         for (int i = bombs.size() - 1; i >= 0; i--) {
             Bomb bomb = bombs.get(i);
@@ -116,17 +114,24 @@ public class Game implements Cloneable {
                 bombs.remove(i);
             }
         }
-        // Cập nhật các Balloon
+
+        // Cập nhật các thực thể
         for (Balloon balloon : balloons) {
             if (balloon.isAlive()) {
                 balloon.update(this);
             }
         }
+
+        if (aiPlayer.isAlive()) {
+            aiPlayer.update(this);  // Cập nhật AIPlayer
+        }
+
         // Kiểm tra trạng thái của người chơi
         if (!player.isAlive()) {
             gameOver = true;
             System.out.println("Người chơi đã chết. Game Over!");
         }
+
         // Kiểm tra trạng thái của AIPlayer
         if (!aiPlayer.isAlive()) {
             gameWon = true;
@@ -135,47 +140,21 @@ public class Game implements Cloneable {
     }
 
     /**
-     * Xử lý lượt đi của người chơi.
-     *
-     * @param action Hành động của người chơi.
-     */
-    public void playerMove(Action action) {
-        if (isGameOver()) return;
-        executePlayerAction(action);
-        update(); // Cập nhật sau khi người chơi di chuyển
-        isPlayerTurn = false; // Chuyển sang lượt AI
-    }
-
-    /**
-     * Xử lý lượt đi của AI.
-     */
-    public void aiMove() {
-        if (isGameOver()) return;
-        aiPlayer.update(this); // AI thực hiện lượt đi
-        update(); // Cập nhật sau khi AI di chuyển
-        isPlayerTurn = true; // Chuyển sang lượt người chơi
-    }
-
-    /**
-     * Kiểm tra trạng thái trò chơi.
-     *
-     * @return true nếu trò chơi kết thúc, false nếu còn tiếp tục.
+     * Kiểm tra trạng thái trò chơi
      */
     public boolean isGameOver() {
         return gameOver || gameWon;
     }
 
     /**
-     * Kiểm tra người chơi có thắng không.
-     *
-     * @return true nếu người chơi thắng, false nếu chưa.
+     * Kiểm tra người chơi có thắng không
      */
     public boolean isGameWon() {
         return gameWon;
     }
 
     /**
-     * Lấy danh sách các ô bị nổ của một bom.
+     * Lấy danh sách các ô bị nổ của một bom
      */
     public List<int[]> getExplosionTiles(Bomb bomb) {
         List<int[]> explosionTiles = new ArrayList<>();
@@ -191,11 +170,13 @@ public class Game implements Cloneable {
                 int tx = bomb.getX() + dir[0] * i;
                 int ty = bomb.getY() + dir[1] * i;
                 char tile = gameMap.getTile(tx, ty);
-                if (tile == '#') { // Tường không phá hủy
+                if (tile == '#') {
+                    // Gặp tường không phá hủy, ngừng lan
                     break;
                 }
                 explosionTiles.add(new int[]{tx, ty});
-                if (tile == 'D') { // Tường phá hủy
+                if (tile == 'D') {
+                    // Gặp tường phá hủy, thêm vào danh sách và ngừng lan
                     break;
                 }
             }
@@ -204,35 +185,35 @@ public class Game implements Cloneable {
     }
 
     /**
-     * Lấy bản đồ trò chơi.
+     * Lấy bản đồ trò chơi
      */
     public GameMap getGameMap() {
         return gameMap;
     }
 
     /**
-     * Lấy danh sách các bom hiện có.
+     * Lấy danh sách các bom hiện có
      */
     public List<Bomb> getBombs() {
         return bombs;
     }
 
     /**
-     * Lấy danh sách Balloon hiện có.
+     * Lấy danh sách Balloon hiện có
      */
     public List<Balloon> getBalloons() {
         return balloons;
     }
 
     /**
-     * Lấy người chơi.
+     * Lấy người chơi
      */
     public Player getPlayer() {
         return player;
     }
 
     /**
-     * Lấy AIPlayer.
+     * Lấy AIPlayer
      */
     public AIPlayer getAiPlayer() {
         return aiPlayer;
@@ -240,13 +221,12 @@ public class Game implements Cloneable {
 
     /**
      * Di chuyển một thực thể trong trò chơi.
-     *
      * @param entity Thực thể cần di chuyển.
-     * @param dx     Số ô di chuyển theo trục X.
-     * @param dy     Số ô di chuyển theo trục Y.
+     * @param dx Số ô di chuyển theo trục X.
+     * @param dy Số ô di chuyển theo trục Y.
      */
     public void moveEntity(Entity entity, int dx, int dy) {
-        if (isGameOver()) return;
+        if (gameOver || gameWon) return;
         int newX = entity.getX() + dx;
         int newY = entity.getY() + dy;
         if (isValidMove(newX, newY, entity)) {
@@ -260,13 +240,6 @@ public class Game implements Cloneable {
                     applyItemEffect(item, player);
                     gameMap.removeItem(item);
                     System.out.println("Người chơi đã nhặt vật phẩm: " + item.getType());
-                }
-            }
-            // Kiểm tra va chạm với Balloon
-            for (Balloon balloon : balloons) {
-                if (balloon.isAlive() && balloon.getX() == newX && balloon.getY() == newY) {
-                    balloon.setAlive(false);
-                    System.out.println("Balloon tại (" + newX + ", " + newY + ") đã bị tiêu diệt!");
                 }
             }
         }
@@ -331,38 +304,6 @@ public class Game implements Cloneable {
         }
     }
 
-    /**
-     * Thực hiện hành động của người chơi.
-     *
-     * @param action Hành động của người chơi.
-     */
-    private void executePlayerAction(Action action) {
-        switch (action.getActionType()) {
-            case MOVE_UP:
-                moveEntity(player, 0, -1);
-                System.out.println("Người chơi di chuyển lên.");
-                break;
-            case MOVE_DOWN:
-                moveEntity(player, 0, 1);
-                System.out.println("Người chơi di chuyển xuống.");
-                break;
-            case MOVE_LEFT:
-                moveEntity(player, -1, 0);
-                System.out.println("Người chơi di chuyển trái.");
-                break;
-            case MOVE_RIGHT:
-                moveEntity(player, 1, 0);
-                System.out.println("Người chơi di chuyển phải.");
-                break;
-            case PLACE_BOMB:
-                placeBomb(player);
-                break;
-            case STAY:
-                System.out.println("Người chơi ở lại.");
-                break;
-        }
-    }
-
     @Override
     public Game clone() {
         try {
@@ -385,21 +326,15 @@ public class Game implements Cloneable {
         }
     }
 
-    /**
-     * Lấy khóa trạng thái cho Transposition Table.
-     */
     public String getStateHash() {
         StringBuilder hash = new StringBuilder();
-        hash.append(player.getX()).append(",").append(player.getY()).append(",");
-        hash.append(aiPlayer.getX()).append(",").append(aiPlayer.getY()).append(",");
-        hash.append(bombs.size()).append(",");
-        hash.append(balloons.size());
+        hash.append(player.getX()).append(player.getY());
+        for (Balloon balloon : balloons) {
+            hash.append(balloon.getX()).append(balloon.getY());
+        }
         return hash.toString();
     }
 
-    /**
-     * Đặt vị trí AIPlayer (chỉ để sử dụng trong phương thức MinimaxStrategy).
-     */
     public void setAiPlayerPosition(int x, int y) {
         if (aiPlayer != null) {
             aiPlayer.setX(x);
@@ -407,26 +342,39 @@ public class Game implements Cloneable {
         }
     }
 
-    /**
-     * Kiểm tra xem AIPlayer có bị dồn vào ngõ cụt không.
-     */
-    private boolean isCornered(AIPlayer aiPlayer, GameMap map) {
-        int x = aiPlayer.getX();
-        int y = aiPlayer.getY();
-        int walkable = 0;
-        int[][] directions = {
-                {0, -1}, // Lên
-                {0, 1},  // Xuống
-                {-1, 0}, // Trái
-                {1, 0}   // Phải
-        };
-        for (int[] dir : directions) {
-            int newX = x + dir[0];
-            int newY = y + dir[1];
-            if (map.isWalkable(newX, newY)) {
-                walkable++;
-            }
+    public void setAIPlayerX(int x) {
+        if (aiPlayer != null) {
+            aiPlayer.setX(x); // Cập nhật vị trí X của AIPlayer
         }
-        return walkable <= 1; // Nếu có ít hơn hoặc bằng 1 hướng đi, coi như bị dồn vào ngõ cụt
+    }
+
+    public void setAIPlayerY(int y) {
+        if (aiPlayer != null) {
+            aiPlayer.setY(y); // Cập nhật vị trí Y của AIPlayer
+        }
+    }
+
+    public void setPlayerX(int x) {
+        if (player != null) {
+            player.setX(x); // Cập nhật vị trí X của người chơi
+        }
+    }
+
+    public void setPlayerY(int y) {
+        if (player != null) {
+            player.setY(y); // Cập nhật vị trí Y của người chơi
+        }
+    }
+
+    public void setBombCount(int count) {
+        if (player != null) {
+            player.setBombCount(count); // Cập nhật số lượng bom của người chơi
+        }
+    }
+
+    public void setGameMap(int[][] gameMapData) {
+        if (gameMap != null) {
+            gameMap.setMap(gameMapData); // Cập nhật bản đồ trò chơi
+        }
     }
 }

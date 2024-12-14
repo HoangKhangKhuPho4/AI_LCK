@@ -1,11 +1,7 @@
-
 package ai;
 
 import java.util.*;
 
-/**
- * Lớp đại diện cho AI Player trong trò chơi.
- */
 public class AIPlayer extends Entity implements Cloneable, Subject {
     private Game game;
     private MovementStrategy movementStrategy;
@@ -14,8 +10,6 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
     private int explosionRange = 1;
     private List<Observer> observers = new ArrayList<>();
     private boolean isExecuting = false;
-
-    // Lưu trạng thái và hành động của AI trong quá khứ
     private List<AIState> stateHistory = new ArrayList<>();
 
     public AIPlayer(int startX, int startY, MovementStrategy strategy, Game game) {
@@ -27,9 +21,9 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
         this.game = game;
         this.bombCount = 1; // Khởi tạo số bom ban đầu
     }
+
     private int escapeAttempts = 0;
     private final int MAX_ESCAPE_ATTEMPTS = 3;
-
 
     @Override
     public void update(Game game) {
@@ -37,28 +31,46 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
             System.out.println(this.getClass().getSimpleName() + " không còn sống.");
             return;
         }
-        if (!isExecuting) {
+
+        ticksUntilMove--;
+        if (ticksUntilMove <= 0 && !isExecuting) {
             isExecuting = true;
             System.out.println("AIPlayer bắt đầu cập nhật...");
-            // Các bước đi của AI như đã có
+            scanForHazards(game, 3);
+            predictBombs(game);
+            predictPlayerActions(game);
+            recordState(game);
+            updateStrategy();
+
+            ticksUntilMove = moveDelay;
+
+            if (isCornered(this, game.getGameMap())) {
+                escapeAttempts++;
+                System.out.println("AIPlayer đang bị dồn vào ngõ cụt, cố gắng thoát lần " + escapeAttempts);
+                if (escapeAttempts >= MAX_ESCAPE_ATTEMPTS) {
+                    System.out.println("AIPlayer đã cố gắng thoát nhiều lần, chuyển sang chiến lược Minimax.");
+                    setMovementStrategy(new MinimaxStrategy(7, true));
+                    escapeAttempts = 0;
+                } else {
+                    setMovementStrategy(new EscapeBombsStrategy(game.getGameMap()));
+                }
+            } else {
+                setMovementStrategy(new MinimaxStrategy(7, true));
+                escapeAttempts = 0;
+            }
+
             AIWorker aiWorker = new AIWorker(this, game);
             aiWorker.execute();
             System.out.println("AIWorker đã được gọi để thực hiện di chuyển.");
         }
     }
 
-
-
     private boolean isCornered(AIPlayer aiPlayer, GameMap map) {
         int x = aiPlayer.getX();
         int y = aiPlayer.getY();
         int walkable = 0;
-        int[][] directions = {
-                {0, -1}, // Lên
-                {0, 1},  // Xuống
-                {-1, 0}, // Trái
-                {1, 0}   // Phải
-        };
+        int[][] directions = { {0, -1}, {0, 1}, {-1, 0}, {1, 0} };
+
         for (int[] dir : directions) {
             int newX = x + dir[0];
             int newY = y + dir[1];
@@ -66,22 +78,18 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
                 walkable++;
             }
         }
-        return walkable <= 1; // Nếu có ít hơn hoặc bằng 1 hướng đi, coi như bị dồn vào ngõ cụt
+        return walkable <= 1; // Nếu có ít hơn hoặc bằng 1 hướng đi
     }
-
-
 
     public void setExecuting(boolean executing) {
         this.isExecuting = executing;
     }
 
-
     @Override
     protected int getExplosionRange() {
-        return explosionRange; // Trả về phạm vi nổ thực tế
+        return explosionRange;
     }
 
-    // Dự đoán hành động của người chơi
     public void predictPlayerActions(Game game) {
         Player player = game.getPlayer();
         int distance = Math.abs(player.getX() - x) + Math.abs(player.getY() - y);
@@ -90,7 +98,6 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
         }
     }
 
-    // Dự đoán bom sắp nổ
     public void predictBombs(Game game) {
         for (Bomb bomb : game.getBombs()) {
             if (!bomb.isExploded()) {
@@ -102,14 +109,12 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
         }
     }
 
-    // Phân tích các vật thể trong tầm nhìn (bom và balloon)
     public void scanForHazards(Game game, int radius) {
         List<int[]> visibleArea = getVisibleArea(radius);
         for (int[] coord : visibleArea) {
             int newX = coord[0];
             int newY = coord[1];
 
-            // Kiểm tra bom
             for (Bomb bomb : game.getBombs()) {
                 int distance = Math.abs(bomb.getX() - newX) + Math.abs(bomb.getY() - newY);
                 if (distance <= bomb.getExplosionRange()) {
@@ -117,7 +122,6 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
                 }
             }
 
-            // Kiểm tra Balloon
             for (Balloon balloon : game.getBalloons()) {
                 int distance = Math.abs(balloon.getX() - newX) + Math.abs(balloon.getY() - newY);
                 if (distance <= 2) {
@@ -127,25 +131,21 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
         }
     }
 
-    // Lưu lại trạng thái của AI và kết quả
     public void recordState(Game game) {
-        // Lưu trạng thái (vị trí, số bom, số lượng Balloon)
         AIState state = new AIState(x, y, bombCount, game.getBalloons().size());
         stateHistory.add(state);
         System.out.println("Lưu trạng thái AI tại (" + x + ", " + y + ")");
     }
 
-    // Cập nhật chiến lược sau mỗi trải nghiệm (học máy)
     public void updateStrategy() {
-        // Giả sử bạn sử dụng thuật toán học máy để tối ưu chiến lược
-        // Cập nhật chiến lược dựa trên lịch sử trạng thái
         System.out.println("Cập nhật chiến lược dựa trên lịch sử trạng thái.");
-        // Ở đây, bạn có thể thêm mã để phân tích stateHistory và điều chỉnh movementStrategy
-        // Ví dụ: sử dụng dữ liệu để thay đổi MovementStrategy hoặc cải thiện thuật toán Minimax
+
+        // Logic cập nhật chiến lược có thể thêm vào đây
     }
 
     public List<int[]> getVisibleArea(int radius) {
         List<int[]> visibleArea = new ArrayList<>();
+
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dy = -radius; dy <= radius; dy++) {
                 int newX = x + dx;
@@ -155,10 +155,10 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
                 }
             }
         }
+
         return visibleArea;
     }
 
-    // Cập nhật chiến lược di chuyển
     public void setMovementStrategy(MovementStrategy strategy) {
         this.movementStrategy = strategy;
     }
@@ -171,16 +171,11 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
         return cloned;
     }
 
-    // Implement Subject interface
     @Override
-    public void attach(Observer observer) {
-        observers.add(observer);
-    }
+    public void attach(Observer observer) { observers.add(observer); }
 
     @Override
-    public void detach(Observer observer) {
-        observers.remove(observer);
-    }
+    public void detach(Observer observer) { observers.remove(observer); }
 
     @Override
     public void notifyObservers(Event event) {
@@ -190,7 +185,36 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
     }
 
     // Phương thức để lấy chiến lược di chuyển
-    public MovementStrategy getMovementStrategy() {
-        return movementStrategy;
+    public MovementStrategy getMovementStrategy() { return movementStrategy; }
+
+    // Hàm Heuristic
+    private int heuristic(Node state) {
+        // Giả định rằng Node chứa thông tin về vị trí của AI và người chơi
+        int aiX = state.getAIPlayerX();
+        int aiY = state.getAIPlayerY();
+        int playerX = state.getPlayerX();
+        int playerY = state.getPlayerY();
+
+        // Tính toán khoảng cách Manhattan giữa AI và người chơi
+        int distanceToPlayer = Math.abs(aiX - playerX) + Math.abs(aiY - playerY);
+
+        // Nếu AI ở gần người chơi, trả về giá trị âm (AI có nguy cơ)
+        if (distanceToPlayer < 3) {
+            return -100 + distanceToPlayer; // Giá trị âm lớn hơn nếu gần người chơi
+        }
+
+        // Nếu AI có thể đặt bom và gây nổ gần người chơi
+        if (canPlaceBombNearPlayer(state)) {
+            return 100; // Giá trị dương nếu có cơ hội tấn công
+        }
+
+        // Trả về giá trị dựa trên khoảng cách an toàn từ bom hoặc các mối nguy hiểm khác
+        return distanceToPlayer; // Giá trị trung bình dựa trên khoảng cách an toàn
+    }
+
+    private boolean canPlaceBombNearPlayer(Node state) {
+        // Logic kiểm tra xem AI có thể đặt bom gần vị trí của người chơi không.
+        // Ví dụ: kiểm tra các ô xung quanh người chơi để xem có thể đặt bom hay không.
+        return false; // Cần triển khai logic thực tế ở đây.
     }
 }

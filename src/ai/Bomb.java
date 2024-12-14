@@ -1,4 +1,5 @@
 
+
 package ai;
 
 import java.util.ArrayList;
@@ -146,7 +147,6 @@ public class Bomb implements Subject, Cloneable {
         this.explosionProcessed = explosionProcessed;
     }
 
-    // Trong Bomb.java
     @Override
     public Bomb clone() {
         try {
