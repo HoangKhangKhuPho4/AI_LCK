@@ -1,5 +1,6 @@
 
 
+
 package ai;
 
 import java.util.*;
@@ -19,11 +20,8 @@ public class Game implements Cloneable {
     private int level;
     private boolean isRunning;
 
-
-
-
     public Game() {
-        gameMap = new GameMap(20, 20);
+        gameMap = new GameMap(19, 19);
         player = new Player(10, 10);
         bombs = new ArrayList<>();
         boolean isrunning = true;
@@ -395,5 +393,9 @@ public class Game implements Cloneable {
             balloons.clear(); // Xóa danh sách Balloon hiện tại
             initializeBalloons(count); // Khởi tạo lại Balloon
         }
+    }
+
+    public void setGameOver(boolean b) {
+        this.gameOver = b; // Cập nhật trạng thái kết thúc trò chơi
     }
 }
