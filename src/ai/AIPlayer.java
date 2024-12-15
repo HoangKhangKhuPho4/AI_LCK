@@ -1,3 +1,4 @@
+
 package ai;
 
 import java.util.*;
@@ -217,4 +218,6 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
         // Ví dụ: kiểm tra các ô xung quanh người chơi để xem có thể đặt bom hay không.
         return false; // Cần triển khai logic thực tế ở đây.
     }
+
+
 }

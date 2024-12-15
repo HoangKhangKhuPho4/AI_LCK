@@ -1,5 +1,3 @@
-
-
 package ai;
 
 import java.util.ArrayList;
@@ -186,7 +184,7 @@ public class GameMap implements Cloneable {
 
     public void setMap(int[][] gameMapData) {
         // Kiểm tra nếu dữ liệu bản đồ hợp lệ
-        if (gameMapData == null || gameMapData.length != height || gameMapData[0].length != width) {
+        if (gameMapData == null || gameMapData.length != width || gameMapData[0].length != height) {
             System.out.println("Dữ liệu bản đồ không hợp lệ.");
             return;
         }
@@ -225,4 +223,29 @@ public class GameMap implements Cloneable {
         }
     }
 
+    /**
+     * Chuyển đổi bản đồ từ char[][] sang int[][] với các mã số tương ứng.
+     */
+    public int[][] getMap() {
+        int[][] intMap = new int[width][height];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                switch (map[i][j]) {
+                    case ' ':
+                        intMap[i][j] = 0; // Ô trống
+                        break;
+                    case '#':
+                        intMap[i][j] = 1; // Tường không phá hủy
+                        break;
+                    case 'D':
+                        intMap[i][j] = 2; // Tường phá hủy
+                        break;
+                    default:
+                        intMap[i][j] = 0; // Mặc định là ô trống nếu không xác định
+                        break;
+                }
+            }
+        }
+        return intMap;
+    }
 }

@@ -1,4 +1,5 @@
 
+
 package ai;
 
 import java.util.*;
@@ -16,11 +17,16 @@ public class Game implements Cloneable {
     private boolean gameWon;
     private Random rand;
     private int level;
+    private boolean isRunning;
+
+
+
 
     public Game() {
         gameMap = new GameMap(20, 20);
         player = new Player(10, 10);
         bombs = new ArrayList<>();
+        boolean isrunning = true;
         balloons = new ArrayList<>();
         gameOver = false;
         gameWon = false;
@@ -268,6 +274,8 @@ public class Game implements Cloneable {
         return true;
     }
 
+
+
     /**
      * Thêm bom vào danh sách bom và đăng ký Observer.
      */
@@ -375,6 +383,17 @@ public class Game implements Cloneable {
     public void setGameMap(int[][] gameMapData) {
         if (gameMap != null) {
             gameMap.setMap(gameMapData); // Cập nhật bản đồ trò chơi
+        }
+    }
+
+    public void setBombs(List<Bomb> bombs) {
+        this.bombs = new ArrayList<>(bombs); // Cập nhật danh sách bom
+    }
+
+    public void setBalloonCount(int count) {
+        if (balloons != null) {
+            balloons.clear(); // Xóa danh sách Balloon hiện tại
+            initializeBalloons(count); // Khởi tạo lại Balloon
         }
     }
 }

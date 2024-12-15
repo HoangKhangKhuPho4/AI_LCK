@@ -1,6 +1,9 @@
 
 
+
 package ai;
+
+import java.util.List;
 
 /**
  * Lớp đại diện cho người chơi trong trò chơi.
@@ -60,5 +63,9 @@ public class Player extends Entity implements Cloneable {
     // Phương thức để lấy số lượng bom hiện tại
     public int getBombCount() {
         return bombCount;
+    }
+
+    public void move(int i, int i1, GameMap gameMap, List<Bomb> bombs) {
+
     }
 }
