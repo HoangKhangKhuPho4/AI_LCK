@@ -216,7 +216,6 @@ public class MinimaxStrategy implements MovementStrategy {
     /**
      * Hàm đánh giá trạng thái trò chơi.
      */
-    // Trong MinimaxStrategy.java
     // Trong MinimaxStrategy.java, trong hàm evaluateState
     private double evaluateState(Game state) {
         if (state.isGameWon()) {
@@ -382,7 +381,6 @@ public class MinimaxStrategy implements MovementStrategy {
         // Tạm thời đặt bom và kiểm tra xem AI còn đường thoát hay không
         Game clonedGame = game.clone();
         clonedGame.placeBomb(entity); // Đặt bom trên bản sao
-        clonedGame.update(); // Cập nhật trạng thái sau khi đặt bom
 
         // Kiểm tra xem có lối thoát an toàn nào cho AI không
         List<int[]> safePositions = new EscapeBombsStrategy(clonedGame.getGameMap()).findSafePositions(entity, clonedGame);
@@ -427,5 +425,7 @@ public class MinimaxStrategy implements MovementStrategy {
             new RandomMovementStrategy().move(entity, game);
         }
     }
+
+
 
 }

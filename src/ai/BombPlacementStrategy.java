@@ -15,6 +15,8 @@ public class BombPlacementStrategy implements MovementStrategy {
         // Chiến lược này chỉ tập trung vào việc đặt bom
     }
 
+
+
     /**
      * Quyết định đặt bom dựa trên vị trí hiện tại và tình trạng trò chơi.
      * @param entity AIPlayer thực hiện đặt bom.
@@ -96,7 +98,6 @@ public class BombPlacementStrategy implements MovementStrategy {
         // Tạm thời đặt bom và kiểm tra khả năng di chuyển
         Game clonedGame = game.clone();
         clonedGame.placeBomb(entity);
-        clonedGame.update(); // Cập nhật trạng thái sau khi đặt bom
 
         // Sử dụng chiến lược tìm đường đi an toàn để xem AIPlayer có thể di chuyển ra khỏi vùng nổ không
         MovementStrategy escapeStrategy = new EscapeBombsStrategy(clonedGame.getGameMap());

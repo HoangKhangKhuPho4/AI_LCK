@@ -1,11 +1,11 @@
 package ai;
 /**
- * Sự kiện khi AIPlayer di chuyển.
+ * Sự kiện khi người chơi di chuyển.
  */
-public class AIPlayerMovedEvent extends Event {
+public class PlayerMovedEvent extends Event {
     private int newX;
     private int newY;
-    public AIPlayerMovedEvent(int newX, int newY) {
+    public PlayerMovedEvent(int newX, int newY) {
         this.newX = newX;
         this.newY = newY;
     }

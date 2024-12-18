@@ -1,33 +1,17 @@
-
-
-
 package ai;
 
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
+import ai.Game;
+import ai.GameFrame;
 
-/**
- * Lớp chính để chạy trò chơi.
- */
+import javax.swing.*;
+
+// Trong lớp Main
 public class Main {
     public static void main(String[] args) {
-        Game game = new Game();
-        GameFrame gameFrame = new GameFrame(game);
-        Timer timer = new Timer(100, e -> {
-            // Thực hiện cập nhật trên luồng nền
-            new Thread(() -> {
-                game.update();
-                // Cập nhật giao diện trên luồng EDT
-                SwingUtilities.invokeLater(() -> {
-                    gameFrame.refresh();
-                    // Kiểm tra trạng thái trò chơi
-                    if (game.isGameOver()) {
-                        ((Timer) e.getSource()).stop();
-                    }
-                });
-            }).start();
+        SwingUtilities.invokeLater(() -> {
+            Game game = new Game();
+            GameFrame gameFrame = new GameFrame(game);
+            // Không sử dụng Timer cho cơ chế turn-based
         });
-        timer.start();
-
     }
 }

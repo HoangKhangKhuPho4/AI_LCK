@@ -1,6 +1,3 @@
-
-
-
 package ai;
 
 import java.util.List;
@@ -61,7 +58,6 @@ public abstract class Entity implements Cloneable, Observer {
         }
         return false;
     }
-
 
     /**
      * Tăng số lượng bom có thể đặt.
@@ -139,5 +135,17 @@ public abstract class Entity implements Cloneable, Observer {
      */
     public void moveRight() {
         this.x += 1;
+    }
+
+    /**
+     * Phương thức được gọi khi thực thể bị trúng bom.
+     * @param bomb Quả bom đã phát nổ.
+     */
+    public void onHitByBomb(Bomb bomb) {
+        // Kiểm tra xem thực thể có trúng bom không
+        if (this.x == bomb.getX() && this.y == bomb.getY()) {
+            this.alive = false;
+            System.out.println(this.getClass().getSimpleName() + " tại (" + x + ", " + y + ") bị trúng bom.");
+        }
     }
 }

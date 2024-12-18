@@ -28,4 +28,8 @@ public class ChasePlayerStrategy implements MovementStrategy {
             System.out.println(entity.getClass().getSimpleName() + " không tìm được đường an toàn, di chuyển ngẫu nhiên.");
         }
     }
+
+
+
+
 }
