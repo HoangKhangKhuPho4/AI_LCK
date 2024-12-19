@@ -1,3 +1,4 @@
+
 package ai;
 /**
  * Lớp đại diện cho các vật phẩm trên bản đồ.

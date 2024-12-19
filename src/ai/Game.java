@@ -1,3 +1,4 @@
+
 // File: ai/Game.java
 package ai;
 
@@ -606,4 +607,31 @@ public class Game implements Cloneable, Subject {
             }
         }
     }
+
+    // Trong lớp Game.java
+
+    /**
+     * Kiểm tra xem thực thể có thể thoát khỏi vùng nổ sau khi đặt bom tại (bombX, bombY) không.
+     *
+     * @param entity Thực thể đặt bom.
+     * @param bombX  Tọa độ X của bom.
+     * @param bombY  Tọa độ Y của bom.
+     * @return True nếu có đường thoát an toàn, false nếu không.
+     */
+    public boolean canEscape(Entity entity, int bombX, int bombY) {
+        // Clone trò chơi để mô phỏng sau khi đặt bom
+        Game clonedGame = this.clone();
+        if (clonedGame == null) return false;
+
+        // Đặt bom trong trò chơi clone
+        clonedGame.placeBomb(entity);
+
+        // Giả sử bạn có một chiến lược di chuyển để tìm đường thoát
+        // Sử dụng Pathfinding để kiểm tra xem có đường thoát an toàn nào không
+        Pathfinding pathfinding = new Pathfinding(clonedGame.getGameMap());
+        List<int[]> path = pathfinding.findSafePath(entity.getX(), entity.getY(), entity.getX(), entity.getY(), clonedGame);
+
+        return !path.isEmpty();
+    }
+
 }

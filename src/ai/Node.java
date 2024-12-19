@@ -1,8 +1,10 @@
 package ai;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
 /**
  * Lớp đại diện cho một trạng thái trò chơi trong thuật toán Minimax.
  */
@@ -10,26 +12,48 @@ public class Node {
     // Vị trí của AIPlayer
     private int aiPlayerX;
     private int aiPlayerY;
+
     // Vị trí của Player
     private int playerX;
     private int playerY;
+
     // Số lượng bom còn lại của AIPlayer
     private int bombCount;
+    private int playerBombCount;
+
     // Bản đồ trò chơi: 0 - ô trống, 1 - tường không phá hủy, 2 - tường phá hủy
     private int[][] gameMap;
+
     // Danh sách bom hiện có trên bản đồ
     private List<Bomb> bombs;
+
     // Phạm vi nổ của AIPlayer
     private int explosionRange;
+
+    // Biến quản lý lượt trong Minimax
+    private boolean isAiTurn;
+
     // Thuộc tính cho thuật toán Minimax
     private double heuristicValue; // Giá trị heuristic của node
-    private Node parent; // Node cha (nếu cần)
-    private double gScore; // Chi phí từ node bắt đầu đến node này (không thường dùng trong Minimax)
-    private double fScore; // Tổng của gScore và heuristicValue (không thường dùng trong Minimax)
+    private Node parent;           // Node cha (nếu cần)
+    private double gScore;         // Chi phí từ node bắt đầu đến node này
+    private double fScore;         // Tổng của gScore và heuristicValue
+
     /**
-     * Constructor để khởi tạo Node với danh sách bom và phạm vi nổ.
+     * Constructor để khởi tạo Node với đầy đủ thông tin, bao gồm cả thông tin lượt chơi.
+     *
+     * @param aiPlayerX        Tọa độ X của AIPlayer.
+     * @param aiPlayerY        Tọa độ Y của AIPlayer.
+     * @param playerX          Tọa độ X của Player.
+     * @param playerY          Tọa độ Y của Player.
+     * @param bombCount        Số lượng bom mà AIPlayer có thể đặt.
+     * @param gameMap          Bản đồ trò chơi.
+     * @param bombs            Danh sách bom hiện tại trên bản đồ.
+     * @param explosionRange   Phạm vi nổ của AIPlayer.
+     * @param isAiTurn         Biến quản lý lượt trong Minimax (true nếu là lượt AIPlayer, false nếu là lượt Player).
      */
-    public Node(int aiPlayerX, int aiPlayerY, int playerX, int playerY, int bombCount, int[][] gameMap, List<Bomb> bombs, int explosionRange) {
+    public Node(int aiPlayerX, int aiPlayerY, int playerX, int playerY, int bombCount,
+                int[][] gameMap, List<Bomb> bombs, int explosionRange, boolean isAiTurn) {
         this.aiPlayerX = aiPlayerX;
         this.aiPlayerY = aiPlayerY;
         this.playerX = playerX;
@@ -38,129 +62,176 @@ public class Node {
         this.gameMap = deepCopyGameMap(gameMap);
         this.bombs = deepCopyBombs(bombs);
         this.explosionRange = explosionRange;
+        this.isAiTurn = isAiTurn;
         this.heuristicValue = 0.0;
         this.parent = null;
-        this.gScore = 0.0;
-        this.fScore = 0.0;
+        this.gScore = Double.MAX_VALUE;
+        this.fScore = Double.MAX_VALUE;
     }
+
+
+    // Getter và Setter cho playerBombCount
+    public int getPlayerBombCount() { return playerBombCount; }
+    public void setPlayerBombCount(int playerBombCount) { this.playerBombCount = playerBombCount; }
     /**
-     * Constructor để khởi tạo Node mà không có bom và với phạm vi nổ mặc định.
+     * Constructor để khởi tạo Node mà không cần thông tin về bom và phạm vi nổ (sử dụng giá trị mặc định).
+     *
+     * @param aiPlayerX Tọa độ X của AIPlayer.
+     * @param aiPlayerY Tọa độ Y của AIPlayer.
+     * @param playerX   Tọa độ X của Player.
+     * @param playerY   Tọa độ Y của Player.
+     * @param bombCount Số lượng bom mà AIPlayer có thể đặt.
+     * @param gameMap   Bản đồ trò chơi.
+     * @param bombs     Danh sách bom hiện tại trên bản đồ.
+     * @param isAiTurn  Biến quản lý lượt trong Minimax.
      */
-    public Node(int aiPlayerX, int aiPlayerY, int playerX, int playerY, int bombCount, int[][] gameMap) {
-        this(aiPlayerX, aiPlayerY, playerX, playerY, bombCount, gameMap, new ArrayList<>(), 1);
+    public Node(int aiPlayerX, int aiPlayerY, int playerX, int playerY, int bombCount,
+                int[][] gameMap, List<Bomb> bombs, boolean isAiTurn) {
+        this(aiPlayerX, aiPlayerY, playerX, playerY, bombCount, gameMap, bombs, 1, isAiTurn);
     }
-    // Getter và Setter cho các thuộc tính mới
-    public double getHeuristicValue() {
-        return heuristicValue;
-    }
-    public void setHeuristicValue(double heuristicValue) {
-        this.heuristicValue = heuristicValue;
-    }
-    public Node getParent() {
-        return parent;
-    }
-    public void setParent(Node parent) {
-        this.parent = parent;
-    }
-    public double getGScore() {
-        return gScore;
-    }
-    public void setGScore(double gScore) {
-        this.gScore = gScore;
-    }
-    public double getFScore() {
-        return fScore;
-    }
-    public void setFScore(double fScore) {
-        this.fScore = fScore;
-    }
-    // Getter cho vị trí AI và người chơi
-    public int getAIPlayerX() {
+
+    // Getter và Setter cho các thuộc tính
+
+    public int getAiPlayerX() {
         return aiPlayerX;
     }
-    public int getAIPlayerY() {
+
+    public void setAiPlayerX(int aiPlayerX) {
+        this.aiPlayerX = aiPlayerX;
+    }
+
+    public int getAiPlayerY() {
         return aiPlayerY;
     }
+
+    public void setAiPlayerY(int aiPlayerY) {
+        this.aiPlayerY = aiPlayerY;
+    }
+
     public int getPlayerX() {
         return playerX;
     }
+
+    public void setPlayerX(int playerX) {
+        this.playerX = playerX;
+    }
+
     public int getPlayerY() {
         return playerY;
     }
-    // Getter cho số lượng bom và bản đồ
+
+    public void setPlayerY(int playerY) {
+        this.playerY = playerY;
+    }
+
     public int getBombCount() {
         return bombCount;
     }
+
+    public void setBombCount(int bombCount) {
+        this.bombCount = bombCount;
+    }
+
     public int[][] getGameMap() {
         return deepCopyGameMap(gameMap);
     }
+
+    public void setGameMap(int[][] gameMap) {
+        this.gameMap = deepCopyGameMap(gameMap);
+    }
+
     public List<Bomb> getBombs() {
         return deepCopyBombs(bombs);
     }
+
+    public void setBombs(List<Bomb> bombs) {
+        this.bombs = deepCopyBombs(bombs);
+    }
+
     public int getExplosionRange() {
         return explosionRange;
     }
-    /**
-     * Kiểm tra xem một ô có hợp lệ hay không (ô trống và không có chướng ngại vật).
-     */
-    public boolean isValidMove(int x, int y) {
-        return x >= 0 && x < gameMap.length && y >= 0 && y < gameMap[0].length && gameMap[x][y] == 0;
+
+    public void setExplosionRange(int explosionRange) {
+        this.explosionRange = explosionRange;
     }
-    /**
-     * Kiểm tra xem AI có thể đặt bom gần người chơi hay không.
-     */
-    public boolean canPlaceBombNearPlayer() {
-        int playerX = this.playerX;
-        int playerY = this.playerY;
-// Kiểm tra các ô xung quanh người chơi
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                if ((dx != 0 || dy != 0) && isValidMove(playerX + dx, playerY + dy)) {
-                    return true; // Có thể đặt bom ở vị trí này
-                }
-            }
-        }
-        return false; // Không thể đặt bom gần người chơi
+
+    public boolean isAiTurn() {
+        return isAiTurn;
     }
-    /**
-     * Phương thức trả về một đối tượng Game (nếu cần).
-     */
-    public Game getGame() {
-// Tạo đối tượng Game mới
-        Game game = new Game();
-// Cập nhật thông tin từ Node vào Game
-        game.setAIPlayerX(this.aiPlayerX); // Vị trí của AI
-        game.setAIPlayerY(this.aiPlayerY); // Vị trí của AI
-        game.setPlayerX(this.playerX); // Vị trí của người chơi
-        game.setPlayerY(this.playerY); // Vị trí của người chơi
-        game.setBombCount(this.bombCount); // Số lượng bom
-        game.setGameMap(this.gameMap); // Bản đồ trò chơi
-        game.setBombs(this.bombs); // Danh sách bom
-        return game;
+
+    public void setAiTurn(boolean isAiTurn) {
+        this.isAiTurn = isAiTurn;
     }
+
+    public double getHeuristicValue() {
+        return heuristicValue;
+    }
+
+    public void setHeuristicValue(double heuristicValue) {
+        this.heuristicValue = heuristicValue;
+    }
+
+    public Node getParent() {
+        return parent;
+    }
+
+    public void setParent(Node parent) {
+        this.parent = parent;
+    }
+
+    public double getGScore() {
+        return gScore;
+    }
+
+    public void setGScore(double gScore) {
+        this.gScore = gScore;
+    }
+
+    public double getFScore() {
+        return fScore;
+    }
+
+    public void setFScore(double fScore) {
+        this.fScore = fScore;
+    }
+
     /**
-     * Phương thức getStateHash để tạo khóa duy nhất cho Transposition Table.
+     * Tạo một chuỗi hash duy nhất đại diện cho trạng thái của Node.
+     *
+     * @return Chuỗi hash đại diện cho trạng thái của Node.
      */
     public String getStateHash() {
         StringBuilder sb = new StringBuilder();
         sb.append(aiPlayerX).append(",").append(aiPlayerY).append("|")
                 .append(playerX).append(",").append(playerY).append("|")
                 .append(bombCount).append("|");
+
+        // Chuyển đổi gameMap thành chuỗi
         for (int[] row : gameMap) {
             for (int cell : row) {
                 sb.append(cell);
             }
             sb.append("/");
         }
-// Thêm thông tin về bom vào hash
+
+        // Thêm thông tin về bom vào hash
         for (Bomb bomb : bombs) {
             sb.append(bomb.getX()).append(",").append(bomb.getY()).append(",")
                     .append(bomb.getCountdown()).append("|");
         }
+
+        // Thêm thông tin lượt chơi
+        sb.append(isAiTurn ? "AI|" : "Player|");
+
         return sb.toString();
     }
+
     /**
-     * Phương thức clone sâu cho gameMap.
+     * Phương thức deep copy cho gameMap.
+     *
+     * @param original Bản đồ gốc cần sao chép.
+     * @return Bản đồ sao chép sâu.
      */
     private int[][] deepCopyGameMap(int[][] original) {
         if (original == null) return null;
@@ -170,8 +241,12 @@ public class Node {
         }
         return copy;
     }
+
     /**
-     * Phương thức clone sâu cho danh sách bom.
+     * Phương thức deep copy cho danh sách bom.
+     *
+     * @param original Danh sách bom gốc cần sao chép.
+     * @return Danh sách bom sao chép sâu.
      */
     private List<Bomb> deepCopyBombs(List<Bomb> original) {
         if (original == null) return null;
@@ -181,8 +256,31 @@ public class Node {
         }
         return copy;
     }
+
     /**
-     * Phương thức equals và hashCode để sử dụng trong Transposition Table.
+     * Phương thức clone để tạo bản sao sâu của Node.
+     *
+     * @return Bản sao của Node.
+     */
+    @Override
+    public Node clone() {
+        try {
+            Node cloned = (Node) super.clone();
+            cloned.gameMap = deepCopyGameMap(this.gameMap);
+            cloned.bombs = deepCopyBombs(this.bombs);
+            cloned.parent = (this.parent != null) ? this.parent.clone() : null;
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Phương thức equals để so sánh hai Node dựa trên trạng thái của chúng.
+     *
+     * @param obj Đối tượng cần so sánh.
+     * @return true nếu hai Node có cùng trạng thái, ngược lại false.
      */
     @Override
     public boolean equals(Object obj) {
@@ -195,11 +293,27 @@ public class Node {
                 playerY == node.playerY &&
                 bombCount == node.bombCount &&
                 explosionRange == node.explosionRange &&
+                isAiTurn == node.isAiTurn &&
                 Objects.deepEquals(gameMap, node.gameMap) &&
                 Objects.equals(bombs, node.bombs);
     }
+
+    /**
+     * Phương thức hashCode để hỗ trợ việc sử dụng Node trong các cấu trúc dữ liệu như HashMap.
+     *
+     * @return Giá trị hash của Node.
+     */
     @Override
     public int hashCode() {
-        return Objects.hash(aiPlayerX, aiPlayerY, playerX, playerY, bombCount, explosionRange, Arrays.deepHashCode(gameMap), bombs);
+        return Objects.hash(aiPlayerX, aiPlayerY, playerX, playerY, bombCount, explosionRange, isAiTurn, Arrays.deepHashCode(gameMap), bombs);
+    }
+
+
+    public int getAIPlayerX() {
+        return aiPlayerX;
+    }
+
+    public int getAIPlayerY() {
+        return aiPlayerY;
     }
 }

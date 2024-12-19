@@ -1,3 +1,4 @@
+
 package ai;
 import java.util.*;
 public class AIPlayer extends Entity implements Cloneable, Subject {
@@ -26,12 +27,22 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
             System.out.println(this.getClass().getSimpleName() + " không còn sống.");
             return;
         }
+
+        ticksUntilMove--;
+        if (ticksUntilMove > 0) {
+            // Chưa đến lượt di chuyển
+            return;
+        }
+        // Đặt lại ticksUntilMove cho lượt tiếp theo
+        ticksUntilMove = moveDelay;
+
         System.out.println("AIPlayer bắt đầu cập nhật...");
         scanForHazards(game, 3);
         predictBombs(game);
         predictPlayerActions(game);
         recordState(game);
         updateStrategy();
+
         if (isCornered(this, game.getGameMap())) {
             escapeAttempts++;
             System.out.println("AIPlayer đang bị dồn vào ngõ cụt, cố gắng thoát lần " + escapeAttempts);
@@ -46,10 +57,12 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
             setMovementStrategy(new MinimaxStrategy(7, true));
             escapeAttempts = 0;
         }
-// Thực hiện chiến lược di chuyển ngay lập tức
+
+        // Thực hiện chiến lược di chuyển
         getMovementStrategy().move(this, game);
         System.out.println("AIPlayer đã di chuyển.");
     }
+
     private boolean isCornered(AIPlayer aiPlayer, GameMap map) {
         int x = aiPlayer.getX();
         int y = aiPlayer.getY();
@@ -114,7 +127,7 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
     }
     public void updateStrategy() {
         System.out.println("Cập nhật chiến lược dựa trên lịch sử trạng thái.");
-    // Logic cập nhật chiến lược có thể thêm vào đây
+        // Logic cập nhật chiến lược có thể thêm vào đây
     }
     public List<int[]> getVisibleArea(int radius) {
         List<int[]> visibleArea = new ArrayList<>();

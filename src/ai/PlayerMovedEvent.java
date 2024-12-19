@@ -1,3 +1,4 @@
+
 package ai;
 /**
  * Sự kiện khi người chơi di chuyển.

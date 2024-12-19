@@ -1,5 +1,6 @@
 
 
+
 // File: ai/GamePanel.java
 package ai;
 
@@ -43,7 +44,6 @@ public class GamePanel extends JPanel {
 
         // Tải hiệu ứng nổ động từ tệp .gif
         this.explosionGif = loadGif("dFOsRT.gif");
-
 
     }
 

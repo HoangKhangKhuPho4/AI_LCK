@@ -1,3 +1,4 @@
+
 package ai;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,6 +34,10 @@ public class Bomb implements Subject, Cloneable {
         this.explosionRange = explosionRange;
         this.observers = new ArrayList<>();
     }
+
+    public Bomb(int aiPlayerX, int aiPlayerY, int countdown, String aiPlayer, int explosionRange) {
+    }
+
     // Các phương thức getter và setter
     public int getX() {
         return x;
@@ -192,4 +197,3 @@ public class Bomb implements Subject, Cloneable {
         }
     }
 }
-

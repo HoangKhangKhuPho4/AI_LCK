@@ -1,320 +1,176 @@
-
 package ai;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 /**
- * Lớp triển khai chiến lược di chuyển sử dụng thuật toán Minimax với Alpha-Beta Pruning và Transposition Table.
+ * Lớp triển khai chiến lược di chuyển sử dụng thuật toán Minimax với Alpha-Beta Pruning.
  */
 public class MinimaxStrategy implements MovementStrategy {
+    private final boolean ismaximizingPlayer;
     private int maxDepth;
-    private boolean isMaximizingPlayer;
 
-    // Transposition Table để lưu trữ kết quả đánh giá các trạng thái
-    private Map<String, Double> transpositionTable;
-
-    public MinimaxStrategy(int maxDepth, boolean isMaximizingPlayer) {
+    /**
+     * Constructor để khởi tạo MinimaxStrategy với độ sâu tối đa.
+     *
+     * @param maxDepth Độ sâu tối đa của thuật toán Minimax.
+     */
+    public MinimaxStrategy(int maxDepth , boolean isMaximizingPlayer) {
         this.maxDepth = maxDepth;
-        this.isMaximizingPlayer = isMaximizingPlayer;
-        this.transpositionTable = new HashMap<>();
+        this.ismaximizingPlayer = isMaximizingPlayer;
     }
 
 
+
     /**
-     * Thuật toán Minimax với Alpha-Beta Pruning và Transposition Table.
+     * Hàm chính của thuật toán Minimax với Alpha-Beta Pruning.
+     *
+     * @param state Trạng thái hiện tại của Node.
+     * @param depth Độ sâu còn lại.
+     * @param alpha Giá trị alpha trong Alpha-Beta Pruning.
+     * @param beta  Giá trị beta trong Alpha-Beta Pruning.
+     * @return Giá trị heuristic của trạng thái.
      */
-    public int minimax(boolean maxmin, Node state, int depth, int alpha, int beta) {
+    private int minimax(Node state, int depth, int alpha, int beta) {
         // Điều kiện dừng đệ quy
         if (depth == 0 || isOver(state)) {
-            return heuristic(state);
+            return (int) heuristic(state);
         }
 
-        if (maxmin) { // Người chơi tối đa
-            int temp = Integer.MIN_VALUE; // Sử dụng Integer.MIN_VALUE thay vì -999999999
-            for (Node child : generateChildren(state)) { // Tạo danh sách node con
-                int value = minimax(false, child, depth - 1, alpha, beta);
-                temp = Math.max(temp, value);
-                alpha = Math.max(alpha, temp);
+        if (state.isAiTurn()) { // Lượt AIPlayer (Maximizing Player)
+            int maxEval = Integer.MIN_VALUE;
+            List<Node> children = generateChildren(state);
+            for (Node child : children) {
+                int eval = minimax(child, depth - 1, alpha, beta);
+                maxEval = Math.max(maxEval, eval);
+                alpha = Math.max(alpha, eval);
                 if (alpha >= beta) {
-                    // Cắt tỉa nhánh không cần thiết
-                    break;
+                    break; // Beta cut-off
                 }
             }
-            return temp;
-        } else { // Người chơi tối thiểu
-            int temp = Integer.MAX_VALUE; // Sử dụng Integer.MAX_VALUE thay vì 999999999
-            for (Node child : generateChildren(state)) { // Tạo danh sách node con
-                int value = minimax(true, child, depth - 1, alpha, beta);
-                temp = Math.min(temp, value);
-                beta = Math.min(beta, temp);
+            return maxEval;
+        } else { // Lượt Player (Minimizing Player)
+            int minEval = Integer.MAX_VALUE;
+            List<Node> children = generateChildren(state);
+            for (Node child : children) {
+                int eval = minimax(child, depth - 1, alpha, beta);
+                minEval = Math.min(minEval, eval);
+                beta = Math.min(beta, eval);
                 if (alpha >= beta) {
-                    // Cắt tỉa nhánh không cần thiết
-                    break;
+                    break; // Alpha cut-off
                 }
             }
-            return temp;
+            return minEval;
         }
     }
-
-    private boolean isOver(Node state) {
-        // Kiểm tra điều kiện kết thúc trò chơi, ví dụ:
-        // - Kiểm tra nếu một trong hai người chơi đã thắng hoặc thua.
-        // - Kiểm tra nếu không còn nước đi hợp lệ nào.
-        // Bạn có thể điều chỉnh tùy theo luật của trò chơi.
-
-        Game game = state.getGame();  // Giả sử bạn có thể lấy Game từ Node
-
-        // Kiểm tra nếu một trong hai người chơi đã thua (ví dụ: AIPlayer hoặc Player)
-        if (game.isGameWon()) {
-            return true;  // Trò chơi đã thắng
-        }
-
-        if (game.isGameOver()) {
-            return true;  // Trò chơi kết thúc do các lý do khác (ví dụ: không còn đường đi hợp lệ hoặc bom đã nổ)
-        }
-
-        // Kiểm tra các điều kiện khác nếu cần, ví dụ như xem AI hay Player có bị kẹt trong một góc hay không
-        return false;
-    }
-
-
-
-    public List<Node> generateChildren(Node state) {
-        List<Node> children = new ArrayList<>();
-        int aiX = state.getAIPlayerX();
-        int aiY = state.getAIPlayerY();
-
-        // Các hướng di chuyển có thể: lên, xuống, trái, phải
-        int[][] directions = {
-                {0, -1}, // Lên
-                {0, 1},  // Xuống
-                {-1, 0}, // Trái
-                {1, 0}   // Phải
-        };
-
-        for (int[] dir : directions) {
-            int newX = aiX + dir[0];
-            int newY = aiY + dir[1];
-
-            // Kiểm tra xem ô mới có hợp lệ không
-            if (state.isValidMove(newX, newY)) {
-                // Tạo trạng thái mới và thêm vào danh sách con
-                Node childState = new Node(newX, newY, state.getPlayerX(), state.getPlayerY(), state.getBombCount(), state.getGameMap());
-                children.add(childState);
-            }
-        }
-
-        return children;
-    }
-
-
-    private boolean isValidMove(int x, int y, Node state) {
-        // Kiểm tra xem ô (x, y) có hợp lệ không (không phải tường hoặc ngoài bản đồ)
-        // Giả sử giá trị 0 là ô trống và các giá trị khác là tường/chướng ngại vật
-        return x >= 0 && x < state.getGameMap().length &&
-                y >= 0 && y < state.getGameMap()[0].length &&
-                state.getGameMap()[x][y] == 0; // 0 là ô trống
-    }
-
-
-
-
-    private int heuristic(Node state) {
-        int aiX = state.getAIPlayerX();
-        int aiY = state.getAIPlayerY();
-        int playerX = state.getPlayerX();
-        int playerY = state.getPlayerY();
-
-        // Tính toán khoảng cách Manhattan giữa AI và người chơi
-        int distanceToPlayer = Math.abs(aiX - playerX) + Math.abs(aiY - playerY);
-
-        // Nếu AI ở gần người chơi, trả về giá trị âm (AI có nguy cơ)
-        if (distanceToPlayer < 3) {
-            return -100 + distanceToPlayer; // Giá trị âm lớn hơn nếu gần người chơi
-        }
-
-        // Nếu AI có thể đặt bom và gây nổ gần người chơi
-        if (canPlaceBombNearPlayer(state)) {
-            return 100; // Giá trị dương nếu có cơ hội tấn công
-        }
-
-        // Trả về giá trị dựa trên khoảng cách an toàn từ bom hoặc các mối nguy hiểm khác
-        return distanceToPlayer; // Giá trị trung bình dựa trên khoảng cách an toàn
-    }
-
-    private boolean canPlaceBombNearPlayer(Node state) {
-        // Lấy vị trí người chơi
-        int playerX = state.getPlayerX();
-        int playerY = state.getPlayerY();
-
-        // Kiểm tra các ô xung quanh người chơi
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                if ((dx != 0 || dy != 0) && isValidMove(playerX + dx, playerY + dy, state)) {
-                    return true; // Có thể đặt bom ở vị trí này
-                }
-            }
-        }
-
-        return false; // Không thể đặt bom gần người chơi
-    }
-
 
     /**
-     * Tạo danh sách các hành động có thể cho người chơi hoặc AI.
+     * Kiểm tra xem trạng thái trò chơi có kết thúc hay không.
+     *
+     * @param state Trạng thái của Node.
+     * @return true nếu trò chơi kết thúc, ngược lại false.
      */
-    // Trong MinimaxStrategy.java, trong hàm generatePossibleActions
-    // Trong MinimaxStrategy.java, trong hàm generatePossibleActions
-    private List<Action> generatePossibleActions(Game state, boolean isMaximizingPlayer) {
-        List<Action> actions = new ArrayList<>();
-        // Thêm các hành động di chuyển
-        actions.add(new Action(ActionType.MOVE_UP));
-        actions.add(new Action(ActionType.MOVE_DOWN));
-        actions.add(new Action(ActionType.MOVE_LEFT));
-        actions.add(new Action(ActionType.MOVE_RIGHT));
+    private boolean isOver(Node state) {
+        // Kiểm tra điều kiện kết thúc trò chơi dựa trên trạng thái của Node
+        // Bạn cần điều chỉnh điều kiện này dựa trên logic trò chơi của bạn.
+        // Ví dụ:
+        // - Nếu một trong hai người chơi đã thắng hoặc thua.
+        // - Nếu không còn nước đi hợp lệ.
 
-        // Thêm hành động đặt bom tại các vị trí tiềm năng
-        if (isMaximizingPlayer && state.getAiPlayer().getBombCount() > 0) {
-            List<int[]> potentialBombPositions = getPotentialBombPositions(state);
-            for (int[] pos : potentialBombPositions) {
-                actions.add(new Action(ActionType.PLACE_BOMB, pos[0], pos[1]));
-            }
-        }
-
-        // **Xáo trộn danh sách hành động để tránh ưu tiên cố định**
-        Collections.shuffle(actions, new Random());
-
-        return actions;
-    }
-
-
-    private List<int[]> getPotentialBombPositions(Game state) {
-        List<int[]> positions = new ArrayList<>();
-        AIPlayer aiPlayer = state.getAiPlayer();
-        int x = aiPlayer.getX();
-        int y = aiPlayer.getY();
-
-        // Thêm vị trí hiện tại để đặt bom
-        positions.add(new int[]{x, y});
-
-        // Thêm các vị trí lân cận
-        int[][] directions = {{0, -1}, // Lên
-                {0, 1},  // Xuống
-                {-1, 0}, // Trái
-                {1, 0}   // Phải
-        };
-        for (int[] dir : directions) {
-            int newX = x + dir[0];
-            int newY = y + dir[1];
-            if (state.getGameMap().isWalkable(newX, newY)) {
-                positions.add(new int[]{newX, newY});
-            }
-        }
-        return positions;
+        // Placeholder: Cần triển khai logic cụ thể
+        // Ví dụ:
+        // return state.isGameWon() || state.isGameOver();
+        return false; // Placeholder: Chưa triển khai
     }
 
     /**
      * Hàm đánh giá trạng thái trò chơi.
+     *
+     * @param state Trạng thái của Node cần đánh giá.
+     * @return Giá trị heuristic của trạng thái.
      */
-    // Trong MinimaxStrategy.java, trong hàm evaluateState
-    private double evaluateState(Game state) {
-        if (state.isGameWon()) {
-            return 1000;
-        }
-        if (state.isGameOver()) {
-            return -1000;
-        }
+    private double heuristic(Node state) {
         double score = 0.0;
 
-        // Khoảng cách giữa người chơi và AI
-        int distance = Math.abs(state.getPlayer().getX() - state.getAiPlayer().getX()) + Math.abs(state.getPlayer().getY() - state.getAiPlayer().getY());
+        // Khoảng cách giữa AI và Player
+        int distance = Math.abs(state.getAiPlayerX() - state.getPlayerX()) +
+                Math.abs(state.getAiPlayerY() - state.getPlayerY());
         score -= distance * 10; // Người chơi càng gần AI, điểm càng thấp
 
         // An toàn của vị trí hiện tại
-        if (!state.getAiPlayer().isSafe(state)) {
+        if (!isSafe(state)) {
             score -= 50; // Phạt nếu AI không an toàn
         }
 
         // Số bom còn lại và phạm vi nổ
-        score += state.getAiPlayer().getBombCount() * 20;
-        score -= state.getPlayer().getBombCount() * 20;
-        score += state.getPlayer().getExplosionRange() * 15;
-        score += state.getAiPlayer().getExplosionRange() * 15;
+        score += state.getBombCount() * 20; // AI có bom hơn
+        // Bạn có thể thêm thông tin về Player bombCount và explosionRange nếu cần
+        // score -= state.getPlayerBombCount() * 20;
+        // score += state.getPlayerExplosionRange() * 15;
+        // score += state.getAiExplosionRange() * 15;
 
         // Nguy hiểm từ bom
         for (Bomb bomb : state.getBombs()) {
             if (!bomb.isExploded()) {
-                int bombDistance = Math.abs(bomb.getX() - state.getPlayer().getX()) + Math.abs(bomb.getY() - state.getPlayer().getY());
+                int bombDistance = Math.abs(bomb.getX() - state.getPlayerX()) +
+                        Math.abs(bomb.getY() - state.getPlayerY());
                 if (bombDistance <= bomb.getExplosionRange()) {
                     score -= (bomb.getExplosionRange() - bombDistance + 1) * 50;
                 }
             }
         }
 
-        // Ưu tiên thu thập vật phẩm
-        for (Item item : state.getGameMap().getItems()) {
-            int itemDistance = Math.abs(item.getX() - state.getAiPlayer().getX()) + Math.abs(item.getY() - state.getAiPlayer().getY());
-            if (item.getType() == Item.ItemType.SPEED) {
-                score += 30 / (itemDistance + 1);
-            } else if (item.getType() == Item.ItemType.EXPLOSION_RANGE) {
-                score += 40 / (itemDistance + 1);
-            }
-        }
-
-        // Đánh giá về Balloon
-        for (Balloon balloon : state.getBalloons()) {
-            if (balloon.isAlive()) {
-                int balloonDistance = Math.abs(balloon.getX() - state.getAiPlayer().getX()) + Math.abs(balloon.getY() - state.getAiPlayer().getY());
-                score -= balloonDistance * 5; // Tránh gần Balloon
-            }
-        }
-
         // Thêm điểm thưởng khi đặt bom gần người chơi hoặc Balloon
-        if (distance <= 3 && state.getAiPlayer().getBombCount() > 0) {
+        if (distance <= 3 && state.getBombCount() > 0) {
             score += 100;
         }
-        for (Balloon balloon : state.getBalloons()) {
-            if (balloon.isAlive()) {
-                int bombProximity = Math.abs(balloon.getX() - state.getAiPlayer().getX()) + Math.abs(balloon.getY() - state.getAiPlayer().getY());
-                if (bombProximity <= state.getAiPlayer().getExplosionRange()) {
-                    score += 50;
-                }
-            }
-        }
 
-        // **Phạt khi AI bị dồn vào ngõ cụt**
-        if (isCornered(state.getAiPlayer(), state.getGameMap())) {
+        // Phạt khi AI bị dồn vào ngõ cụt
+        if (isCornered(state)) {
             score -= 150; // Giảm điểm thay vì tăng
         }
 
-        // **Thêm điểm thưởng cho các vị trí có nhiều hướng đi hơn**
-        int availableDirections = 0;
-        int x = state.getAiPlayer().getX();
-        int y = state.getAiPlayer().getY();
-        int[][] directions = {{0, -1}, // Lên
-                {0, 1},  // Xuống
-                {-1, 0}, // Trái
-                {1, 0}   // Phải
-        };
-        for (int[] dir : directions) {
-            int newX = x + dir[0];
-            int newY = y + dir[1];
-            if (state.getGameMap().isWalkable(newX, newY)) {
-                availableDirections++;
-            }
-        }
+        // Thêm điểm thưởng cho các vị trí có nhiều hướng đi hơn
+        int availableDirections = countAvailableDirections(state.getAiPlayerX(), state.getAiPlayerY(), state.getGameMap());
         score += availableDirections * 10; // Ưu tiên các vị trí có nhiều hướng đi hơn
 
         return score;
     }
 
+    /**
+     * Constructor để khởi tạo MinimaxStrategy với độ sâu tối đa và kiểu người chơi (Maximizing hoặc Minimizing).
+     *
+     * @param maxDepth Độ sâu tối đa của thuật toán Minimax.
+     * @param isMaximizingPlayer true nếu là Maximizing Player, false nếu là Minimizing Player.
+     */
 
-    // Hàm kiểm tra xem AIPlayer có bị dồn vào ngõ cụt không
-    private boolean isCornered(AIPlayer aiPlayer, GameMap map) {
-        int x = aiPlayer.getX();
-        int y = aiPlayer.getY();
+    /**
+     * Kiểm tra xem vị trí của AIPlayer có an toàn không.
+     *
+     * @param state Trạng thái của Node.
+     * @return true nếu an toàn, ngược lại false.
+     */
+    private boolean isSafe(Node state) {
+        // Kiểm tra xem AIPlayer có bị bom hoặc Balloon đang tấn công không
+        // Bạn cần thêm logic phù hợp dựa trên trạng thái của Node
+        // Placeholder: Giả sử AIPlayer luôn an toàn
+        return true;
+    }
+
+    /**
+     * Kiểm tra xem AIPlayer có bị dồn vào ngõ cụt không.
+     *
+     * @param state Trạng thái của Node.
+     * @return true nếu bị dồn vào ngõ cụt, ngược lại false.
+     */
+    private boolean isCornered(Node state) {
+        int x = state.getAiPlayerX();
+        int y = state.getAiPlayerY();
         int walkable = 0;
-        int[][] directions = {{0, -1}, // Lên
+        int[][] directions = {
+                {0, -1}, // Lên
                 {0, 1},  // Xuống
                 {-1, 0}, // Trái
                 {1, 0}   // Phải
@@ -322,18 +178,273 @@ public class MinimaxStrategy implements MovementStrategy {
         for (int[] dir : directions) {
             int newX = x + dir[0];
             int newY = y + dir[1];
-            if (map.isWalkable(newX, newY)) {
+            if (isWalkable(newX, newY, state.getGameMap())) {
                 walkable++;
             }
         }
         return walkable <= 1; // Nếu có ít hơn hoặc bằng 1 hướng đi, coi như bị dồn vào ngõ cụt
     }
 
+    /**
+     * Kiểm tra xem ô (x, y) có walkable không.
+     *
+     * @param x       Tọa độ X.
+     * @param y       Tọa độ Y.
+     * @param gameMap Bản đồ trò chơi.
+     * @return true nếu ô walkable, ngược lại false.
+     */
+    private boolean isWalkable(int x, int y, int[][] gameMap) {
+        return x >= 0 && x < gameMap.length &&
+                y >= 0 && y < gameMap[0].length &&
+                gameMap[x][y] == 0; // 0 là ô trống
+    }
+
+    /**
+     * Đếm số hướng đi khả thi từ vị trí (x, y).
+     *
+     * @param x       Tọa độ X của AIPlayer.
+     * @param y       Tọa độ Y của AIPlayer.
+     * @param gameMap Bản đồ trò chơi.
+     * @return Số hướng đi khả thi.
+     */
+    private int countAvailableDirections(int x, int y, int[][] gameMap) {
+        int count = 0;
+        int[][] directions = {
+                {0, -1}, // Lên
+                {0, 1},  // Xuống
+                {-1, 0}, // Trái
+                {1, 0}   // Phải
+        };
+        for (int[] dir : directions) {
+            int newX = x + dir[0];
+            int newY = y + dir[1];
+            if (isWalkable(newX, newY, gameMap)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Tạo danh sách các trạng thái con dựa trên lượt hiện tại trong Node.
+     *
+     * @param state Trạng thái hiện tại của Node.
+     * @return Danh sách các trạng thái con.
+     */
+    /**
+     * Tạo danh sách các trạng thái con dựa trên lượt hiện tại trong Node.
+     *
+     * @param state Trạng thái hiện tại của Node.
+     * @return Danh sách các trạng thái con.
+     */
+    private List<Node> generateChildren(Node state) {
+        List<Node> children = new ArrayList<>();
+        ActionType[] actionTypes = {
+                ActionType.MOVE_UP,
+                ActionType.MOVE_DOWN,
+                ActionType.MOVE_LEFT,
+                ActionType.MOVE_RIGHT,
+                ActionType.PLACE_BOMB,
+                ActionType.STAY
+        };
+
+        for (ActionType actionType : actionTypes) {
+            // Tạo hành động
+            Action action = new Action(actionType);
+            if (actionType == ActionType.PLACE_BOMB) {
+                action.setTargetX(state.isAiTurn() ? state.getAiPlayerX() : state.getPlayerX());
+                action.setTargetY(state.isAiTurn() ? state.getAiPlayerY() : state.getPlayerY());
+            }
+
+            // Mô phỏng hành động và tạo trạng thái mới
+            Node child = simulateAction(state, action, state.isAiTurn());
+            if (child != null) {
+                children.add(child);
+            }
+        }
+
+        return children;
+    }
+
+    /**
+     * Simulate một hành động trên một Node và trả về Node mới sau khi thực hiện hành động đó.
+     *
+     * @param currentState Trạng thái hiện tại của Node.
+     * @param action        Hành động cần thực hiện.
+     * @param isAiAction    true nếu hành động được thực hiện bởi AIPlayer, false nếu bởi Player.
+     * @return Trạng thái mới sau khi thực hiện hành động, hoặc null nếu hành động không hợp lệ.
+     */
+    private Node simulateAction(Node currentState, Action action, boolean isAiAction) {
+        // Clone trạng thái hiện tại để không ảnh hưởng đến trạng thái gốc
+        Node clonedState = currentState.clone();
+        if (clonedState == null) return null;
+
+        // Thực hiện hành động trên AIPlayer hoặc Player trong clonedState
+        if (isAiAction) {
+            // Thực hiện hành động trên AIPlayer
+            switch (action.getActionType()) {
+                case MOVE_UP:
+                    if (clonedState.getAiPlayerY() > 0 && isWalkable(clonedState.getAiPlayerX(), clonedState.getAiPlayerY() - 1, clonedState.getGameMap())) {
+                        clonedState.setAiPlayerY(clonedState.getAiPlayerY() - 1);
+                    } else {
+                        return null; // Hành động không hợp lệ
+                    }
+                    break;
+                case MOVE_DOWN:
+                    if (clonedState.getAiPlayerY() < clonedState.getGameMap()[0].length - 1 &&
+                            isWalkable(clonedState.getAiPlayerX(), clonedState.getAiPlayerY() + 1, clonedState.getGameMap())) {
+                        clonedState.setAiPlayerY(clonedState.getAiPlayerY() + 1);
+                    } else {
+                        return null; // Hành động không hợp lệ
+                    }
+                    break;
+                case MOVE_LEFT:
+                    if (clonedState.getAiPlayerX() > 0 && isWalkable(clonedState.getAiPlayerX() - 1, clonedState.getAiPlayerY(), clonedState.getGameMap())) {
+                        clonedState.setAiPlayerX(clonedState.getAiPlayerX() - 1);
+                    } else {
+                        return null; // Hành động không hợp lệ
+                    }
+                    break;
+                case MOVE_RIGHT:
+                    if (clonedState.getAiPlayerX() < clonedState.getGameMap().length - 1 &&
+                            isWalkable(clonedState.getAiPlayerX() + 1, clonedState.getAiPlayerY(), clonedState.getGameMap())) {
+                        clonedState.setAiPlayerX(clonedState.getAiPlayerX() + 1);
+                    } else {
+                        return null; // Hành động không hợp lệ
+                    }
+                    break;
+                case PLACE_BOMB:
+                    // Đặt bom tại vị trí hiện tại của AIPlayer
+                    if (clonedState.getBombCount() > 0 && isWalkable(clonedState.getAiPlayerX(), clonedState.getAiPlayerY(), clonedState.getGameMap())) {
+                        Bomb newBomb = new Bomb(clonedState.getAiPlayerX(), clonedState.getAiPlayerY(), 30, "AIPlayer", clonedState.getExplosionRange());
+                        clonedState.getBombs().add(newBomb);
+                        clonedState.setBombCount(clonedState.getBombCount() - 1);
+                    } else {
+                        return null; // Không thể đặt bom
+                    }
+                    break;
+                case STAY:
+                    // Không thực hiện gì
+                    break;
+            }
+        } else {
+            // Thực hiện hành động trên Player (nếu cần thiết)
+            // Bạn có thể triển khai tương tự như trên
+        }
+
+        // Chuyển lượt chơi
+        clonedState.setAiTurn(!currentState.isAiTurn());
+
+        return clonedState;
+    }
+
+
+
+
+    /**
+     * Hàm thực hiện hành động tốt nhất tìm được bằng thuật toán Minimax.
+     *
+     * @param entity Thực thể thực hiện hành động (AIPlayer).
+     * @param game   Trạng thái trò chơi hiện tại.
+     */
+    @Override
+    public void move(Entity entity, Game game) {
+        AIPlayer aiPlayer = (AIPlayer) entity;
+        // Tạo Node hiện tại dựa trên trạng thái của game
+        Node currentState = new Node(
+                aiPlayer.getX(),
+                aiPlayer.getY(),
+                game.getPlayer().getX(),
+                game.getPlayer().getY(),
+                aiPlayer.getBombCount(),
+                game.getGameMap().clone().getMap(),
+                clonedBombs(game.getBombs()),
+                aiPlayer.getExplosionRange(),
+                true // AIPlayer đang làm lượt
+        );
+
+        // Thực hiện thuật toán Minimax để tìm điểm số tốt nhất
+        int bestScore = Integer.MIN_VALUE;
+        Action bestAction = null;
+
+        List<Action> possibleActions = generatePossibleActions(currentState);
+        System.out.println("Các hành động có thể: ");
+        for (Action action : possibleActions) {
+            System.out.println("- " + action.getActionType());
+        }
+
+        for (Action action : possibleActions) {
+            // Mô phỏng hành động và tạo trạng thái mới
+            Node childState = simulateAction(currentState, action, true);
+            if (childState == null) {
+                System.out.println("Không thể mô phỏng hành động: " + action.getActionType());
+                continue; // Hành động không hợp lệ
+            }
+
+            int score = minimax(childState, maxDepth - 1, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            System.out.println("Hành động: " + action.getActionType() + ", Điểm số: " + score);
+            if (score > bestScore) {
+                bestScore = score;
+                bestAction = action;
+            }
+        }
+
+        // Thực hiện hành động tốt nhất
+        if (bestAction != null) {
+            System.out.println("AIPlayer chọn hành động: " + bestAction.getActionType());
+            executeAction(aiPlayer, game, bestAction);
+        } else {
+            // Nếu không có hành động nào, AI có thể chọn ở lại hoặc di chuyển ngẫu nhiên
+            System.out.println("AIPlayer không tìm thấy hành động tốt nhất, sử dụng RandomMovementStrategy.");
+            new RandomMovementStrategy().move(entity, game);
+        }
+    }
+
+
+
+    /**
+     * Clone danh sách bom để tránh thay đổi trạng thái gốc.
+     *
+     * @param originalBombs Danh sách bom gốc.
+     * @return Danh sách bom clone.
+     */
+    private List<Bomb> clonedBombs(List<Bomb> originalBombs) {
+        List<Bomb> clonedBombs = new ArrayList<>();
+        for (Bomb bomb : originalBombs) {
+            clonedBombs.add(bomb.clone()); // Giả sử Bomb có phương thức clone()
+        }
+        return clonedBombs;
+    }
+
+    /**
+     * Tạo danh sách các hành động có thể cho AIPlayer trong trạng thái hiện tại.
+     *
+     * @param state Trạng thái hiện tại của Node.
+     * @return Danh sách các hành động có thể.
+     */
+    private List<Action> generatePossibleActions(Node state) {
+        List<Action> actions = new ArrayList<>();
+        ActionType[] actionTypes = {ActionType.MOVE_UP, ActionType.MOVE_DOWN, ActionType.MOVE_LEFT, ActionType.MOVE_RIGHT, ActionType.PLACE_BOMB, ActionType.STAY};
+        for (ActionType actionType : actionTypes) {
+            Action action = new Action(actionType);
+            if (actionType == ActionType.PLACE_BOMB) {
+                action.setTargetX(state.getAiPlayerX());
+                action.setTargetY(state.getAiPlayerY());
+            }
+            actions.add(action);
+        }
+        // Xáo trộn danh sách hành động để tránh ưu tiên cố định
+        Collections.shuffle(actions, new Random());
+        return actions;
+    }
 
     /**
      * Thực hiện hành động trên một thực thể trong trò chơi.
+     *
+     * @param entity Thực thể thực hiện hành động.
+     * @param game   Trạng thái trò chơi hiện tại.
+     * @param action Hành động cần thực hiện.
      */
-    // Trong MinimaxStrategy.java, trong hàm executeAction
     private void executeAction(Entity entity, Game game, Action action) {
         switch (action.getActionType()) {
             case MOVE_UP:
@@ -360,72 +471,49 @@ public class MinimaxStrategy implements MovementStrategy {
                     game.addBomb(newBomb);
                     entity.placeBomb();
                     System.out.println(entity.getClass().getSimpleName() + " đặt bom tại (" + bombX + ", " + bombY + ").");
-                    // **Thực hiện di chuyển thoát ngay sau khi đặt bom**
-                    MovementStrategy escapeStrategy = new EscapeBombsStrategy(game.getGameMap());
-                    escapeStrategy.move(entity, game);
-                    System.out.println(entity.getClass().getSimpleName() + " di chuyển ra khỏi khu vực nổ.");
+                    // Thực hiện di chuyển thoát ngay sau khi đặt bom nếu cần
+                    // Bạn có thể thêm logic di chuyển thoát ở đây
                 } else {
                     System.out.println("Không thể đặt bom tại (" + bombX + ", " + bombY + ") vì không có đường thoát an toàn.");
                 }
                 break;
-
             case STAY:
                 System.out.println(entity.getClass().getSimpleName() + " ở lại.");
                 break;
         }
     }
 
-
-    // Trong MinimaxStrategy.java
+    /**
+     * Kiểm tra xem có thể đặt bom một cách an toàn tại vị trí (bombX, bombY) không.
+     *
+     * @param game   Trạng thái trò chơi hiện tại.
+     * @param entity Thực thể đặt bom.
+     * @param bombX  Tọa độ X của bom.
+     * @param bombY  Tọa độ Y của bom.
+     * @return true nếu có thể đặt bom an toàn, ngược lại false.
+     */
     private boolean canPlaceBombSafely(Game game, Entity entity, int bombX, int bombY) {
         // Tạm thời đặt bom và kiểm tra xem AI còn đường thoát hay không
         Game clonedGame = game.clone();
-        clonedGame.placeBomb(entity); // Đặt bom trên bản sao
+        if (clonedGame == null) return false;
+
+        clonedGame.addBomb(new Bomb(bombX, bombY, 30, entity, entity.getExplosionRange()));
+        if (entity instanceof AIPlayer) {
+            AIPlayer aiPlayerClone = clonedGame.getAiPlayer();
+            aiPlayerClone.setX(bombX);
+            aiPlayerClone.setY(bombY);
+        } else if (entity instanceof Player) {
+            Player playerClone = clonedGame.getPlayer();
+            playerClone.setX(bombX);
+            playerClone.setY(bombY);
+        }
 
         // Kiểm tra xem có lối thoát an toàn nào cho AI không
-        List<int[]> safePositions = new EscapeBombsStrategy(clonedGame.getGameMap()).findSafePositions(entity, clonedGame);
-        return !safePositions.isEmpty();
+        // Bạn có thể sử dụng một chiến lược di chuyển khác hoặc một phương thức kiểm tra an toàn
+        // Ở đây, tôi giả định rằng bạn có một phương thức trong Game hoặc một chiến lược di chuyển
+        // để tìm kiếm đường thoát an toàn. Dưới đây là một ví dụ đơn giản:
+
+        // Giả sử sử dụng BFS để tìm đường thoát
+        return clonedGame.canEscape(entity, bombX, bombY);
     }
-
-
-    @Override
-    public void move(Entity entity, Game game) {
-        AIPlayer aiPlayer = (AIPlayer) entity;
-        Node currentState = new Node(aiPlayer.getX(), aiPlayer.getY(),
-                game.getPlayer().getX(), game.getPlayer().getY(),
-                aiPlayer.getBombCount(),
-                game.getGameMap().clone().getMap());
-
-        // Thực hiện thuật toán Minimax để tìm điểm số tốt nhất
-        int bestScore = Integer.MIN_VALUE;
-        Action bestAction = null;
-
-        List<Action> possibleActions = generatePossibleActions(game, isMaximizingPlayer);
-
-        for (Action action : possibleActions) {
-            Game clonedGame = game.clone();
-            AIPlayer clonedAI = clonedGame.getAiPlayer();
-            executeAction(clonedAI, clonedGame, action);
-            int score = minimax(false, new Node(clonedAI.getX(), clonedAI.getY(),
-                            clonedGame.getPlayer().getX(), clonedGame.getPlayer().getY(),
-                            clonedAI.getBombCount(),
-                            clonedGame.getGameMap().clone().getMap()),
-                    maxDepth - 1, Integer.MIN_VALUE, Integer.MAX_VALUE);
-            if (score > bestScore) {
-                bestScore = score;
-                bestAction = action;
-            }
-        }
-
-        // Thực hiện hành động tốt nhất
-        if (bestAction != null) {
-            executeAction(aiPlayer, game, bestAction);
-        } else {
-            // Nếu không có hành động nào, AI có thể chọn ở lại hoặc di chuyển ngẫu nhiên
-            new RandomMovementStrategy().move(entity, game);
-        }
-    }
-
-
-
 }
