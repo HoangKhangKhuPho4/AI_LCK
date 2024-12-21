@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * Lớp đại diện cho một trạng thái trò chơi trong thuật toán Minimax.
  */
-public class Node {
+public class Node implements Cloneable {
     // Vị trí của AIPlayer
     private int aiPlayerX;
     private int aiPlayerY;
