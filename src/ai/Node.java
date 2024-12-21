@@ -69,7 +69,6 @@ public class Node implements Cloneable {
         this.fScore = Double.MAX_VALUE;
     }
 
-
     // Getter và Setter cho playerBombCount
     public int getPlayerBombCount() { return playerBombCount; }
     public void setPlayerBombCount(int playerBombCount) { this.playerBombCount = playerBombCount; }

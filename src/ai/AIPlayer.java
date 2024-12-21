@@ -10,6 +10,8 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
     private List<Observer> observers = new ArrayList<>();
     private boolean isExecuting = false;
     private List<AIState> stateHistory = new ArrayList<>();
+    private int speed = 1;    // Nếu bạn muốn AI cũng có speed
+
     public AIPlayer(int startX, int startY, MovementStrategy strategy, Game game) {
         this.x = startX;
         this.y = startY;
@@ -171,5 +173,32 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
 // Logic kiểm tra xem AI có thể đặt bom gần vị trí của người chơi không.
 // Ví dụ: kiểm tra các ô xung quanh người chơi để xem có thể đặt bom hay không.
         return false; // Cần triển khai logic thực tế ở đây.
+    }
+
+//    public void increaseSpeed() {
+//
+//        if (speed < 5) {
+//            speed++;
+//            System.out.println("AIPlayer speed đã tăng lên: " + speed);
+//            // Hoặc bạn có thể giảm moveDelay để AI nhanh hơn
+//            // this.moveDelay = Math.max(1, moveDelay - 1);
+//        } else {
+//            System.out.println("AIPlayer speed đạt tối đa.");
+//        }
+//    }
+
+    // Giả sử AIPlayer cũng có speed, explosionRange
+    public void increaseSpeed() {
+        // Tăng speed, hoặc giảm moveDelay, tuỳ logic
+        // Ví dụ:
+        if (moveDelay > 1) {
+            moveDelay -= 1;
+            System.out.println("AIPlayer moveDelay giảm còn: " + moveDelay);
+        }
+    }
+
+    public void increaseExplosionRange() {
+        explosionRange++;
+        System.out.println("AIPlayer explosionRange đã tăng lên: " + explosionRange);
     }
 }

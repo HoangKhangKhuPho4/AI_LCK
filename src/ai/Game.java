@@ -246,34 +246,42 @@ public class Game implements Cloneable, Subject {
      */
     public void moveEntity(Entity entity, int dx, int dy) {
         if (gameOver || gameWon) return;
-
         int newX = entity.getX() + dx;
         int newY = entity.getY() + dy;
 
-        // Gọi hàm kiểm tra "isValidMove" với đối số "entity"
+        // Kiểm tra di chuyển hợp lệ
         if (isValidMove(newX, newY, entity)) {
-            // Nếu hợp lệ, cập nhật vị trí
+            // Cập nhật vị trí
             entity.setX(newX);
             entity.setY(newY);
 
-            // Nếu di chuyển là Player, kiểm tra nhặt vật phẩm
-            if (entity instanceof Player) {
-                Player player = (Player) entity;
-                Item item = getItemAt(newX, newY);
-                if (item != null) {
+            // Lấy item tại vị trí mới
+            Item item = getItemAt(newX, newY);
+            if (item != null) {
+                // Nếu là Player, dùng applyItemEffect cho Player
+                if (entity instanceof Player) {
+                    Player player = (Player) entity;
                     applyItemEffect(item, player);
                     gameMap.removeItem(item);
-                    System.out.println("Người chơi đã nhặt vật phẩm: " + item.getType());
+                    System.out.println("Người chơi nhặt vật phẩm: " + item.getType());
                 }
+                // Nếu là AIPlayer, dùng applyItemEffectForAI (cần bạn tự định nghĩa)
+                else if (entity instanceof AIPlayer) {
+                    AIPlayer ai = (AIPlayer) entity;
+                    applyItemEffectForAI(item, ai);  // <-- Hàm bạn tự viết
+                    gameMap.removeItem(item);
+                    System.out.println("AIPlayer nhặt vật phẩm: " + item.getType());
+                }
+                // Có thể mở rộng cho Balloon, hoặc Entity khác nếu muốn
             }
         } else {
-            // Không di chuyển được - bạn có thể in ra thông báo hoặc làm gì tuỳ ý
-            System.out.println(
-                    entity.getClass().getSimpleName()
-                            + " không thể di chuyển tới (" + newX + ", " + newY + ")."
-            );
+            // Không di chuyển được
+            System.out.println(entity.getClass().getSimpleName()
+                    + " không thể di chuyển tới (" + newX + ", " + newY + ").");
         }
     }
+
+
 
     private boolean isValidMove(int x, int y, Entity entity) {
         if (x < 0 || x >= gameMap.getWidth() || y < 0 || y >= gameMap.getHeight()) {
@@ -350,6 +358,20 @@ public class Game implements Cloneable, Subject {
             player.increaseExplosionRange();
         }
     }
+
+    private void applyItemEffectForAI(Item item, AIPlayer ai) {
+        switch (item.getType()) {
+            case SPEED:
+                ai.increaseSpeed();
+                System.out.println("AIPlayer tăng speed!");
+                break;
+            case EXPLOSION_RANGE:
+                ai.increaseExplosionRange();
+                System.out.println("AIPlayer tăng explosion range!");
+                break;
+        }
+    }
+
 
     /**
      * Phương thức clone để tạo bản sao sâu của trò chơi.
