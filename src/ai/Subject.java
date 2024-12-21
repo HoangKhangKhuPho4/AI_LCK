@@ -6,3 +6,4 @@ public interface Subject {
     void detach(Observer observer);
     void notifyObservers(Event event);
 }
+

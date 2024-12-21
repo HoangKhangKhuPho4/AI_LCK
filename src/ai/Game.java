@@ -22,6 +22,7 @@ public class Game implements Cloneable, Subject {
     private int level;
     private boolean isRunning;
     private boolean isPlayerTurn; // Biến quản lý lượt chơi
+    boolean isAiTurn = false;     // Ban đầu AI chưa đến lượt
 
     // Danh sách các Observer
     private List<Observer> observers = new ArrayList<>();
@@ -245,12 +246,17 @@ public class Game implements Cloneable, Subject {
      */
     public void moveEntity(Entity entity, int dx, int dy) {
         if (gameOver || gameWon) return;
+
         int newX = entity.getX() + dx;
         int newY = entity.getY() + dy;
+
+        // Gọi hàm kiểm tra "isValidMove" với đối số "entity"
         if (isValidMove(newX, newY, entity)) {
+            // Nếu hợp lệ, cập nhật vị trí
             entity.setX(newX);
             entity.setY(newY);
-            // Kiểm tra vật phẩm nếu di chuyển người chơi
+
+            // Nếu di chuyển là Player, kiểm tra nhặt vật phẩm
             if (entity instanceof Player) {
                 Player player = (Player) entity;
                 Item item = getItemAt(newX, newY);
@@ -260,36 +266,45 @@ public class Game implements Cloneable, Subject {
                     System.out.println("Người chơi đã nhặt vật phẩm: " + item.getType());
                 }
             }
+        } else {
+            // Không di chuyển được - bạn có thể in ra thông báo hoặc làm gì tuỳ ý
+            System.out.println(
+                    entity.getClass().getSimpleName()
+                            + " không thể di chuyển tới (" + newX + ", " + newY + ")."
+            );
         }
     }
 
-    /**
-     * Kiểm tra xem di chuyển đến vị trí (x, y) có hợp lệ không.
-     *
-     * @param x      Tọa độ X mới.
-     * @param y      Tọa độ Y mới.
-     * @param entity Thực thể đang di chuyển.
-     * @return True nếu di chuyển hợp lệ, ngược lại false.
-     */
     private boolean isValidMove(int x, int y, Entity entity) {
         if (x < 0 || x >= gameMap.getWidth() || y < 0 || y >= gameMap.getHeight()) {
             return false;
         }
-        char tile = gameMap.getTile(x, y);
-        if (tile != ' ') {
+        if (gameMap.getTile(x, y) != ' ') {
             return false;
         }
-        // Kiểm tra va chạm với các thực thể khác
+        // Kiểm tra Balloon
         for (Balloon balloon : balloons) {
-            if (balloon.isAlive() && balloon.getX() == x && balloon.getY() == y) {
+            if (balloon.isAlive() && balloon != entity &&
+                    balloon.getX() == x && balloon.getY() == y) {
                 return false;
             }
         }
-        if (aiPlayer.isAlive() && aiPlayer.getX() == x && aiPlayer.getY() == y) {
+        // Kiểm tra AIPlayer
+        if (aiPlayer.isAlive() && aiPlayer != entity &&
+                aiPlayer.getX() == x && aiPlayer.getY() == y) {
+            return false;
+        }
+        // Kiểm tra Player
+        if (player.isAlive() && player != entity &&
+                player.getX() == x && player.getY() == y) {
             return false;
         }
         return true;
     }
+
+
+
+
 
     /**
      * Thêm bom vào danh sách bom và đăng ký Observer.
@@ -491,15 +506,31 @@ public class Game implements Cloneable, Subject {
      * @param action Hành động của người chơi.
      */
     public void playerMove(Action action) {
+        // Chỉ cho di chuyển nếu:
+        // 1) Đang là lượt Player
+        // 2) Player còn sống
         if (isPlayerTurn && player.isAlive()) {
+
+            // 1) Thực hiện hành động (MOVE_UP, PLACE_BOMB, v.v.)
             executeAction(player, action);
-            updateGame(); // Cập nhật bom và thực thể sau hành động của người chơi
+
+            // 2) Cập nhật game (bom, balloon, item, v.v.)
+            updateGame();
+
+            // 3) Kết thúc lượt Player => chuyển lượt sang AI
             isPlayerTurn = false;
+            isAiTurn = true;
+
+            // 4) Nếu bạn dùng Observer Pattern để vẽ UI, có thể notifyObservers
             notifyObservers(new PlayerMovedEvent(player.getX(), player.getY()));
-            // Sau khi người chơi di chuyển, gọi lượt của AI
+
+            // 5) Mời AI di chuyển
             aiMove();
         }
     }
+
+
+
 
     /**
      * Thực hiện hành động trên một thực thể trong trò chơi.
@@ -534,13 +565,29 @@ public class Game implements Cloneable, Subject {
      * AIPlayer thực hiện lượt của mình.
      */
     public void aiMove() {
-        if (!isPlayerTurn && aiPlayer.isAlive()) {
-            aiPlayer.update(this); // AIPlayer thực hiện hành động
-            updateGame(); // Cập nhật bom và thực thể sau hành động của AI
+        // Chỉ di chuyển khi:
+        // 1) Đang là lượt AI
+        // 2) AIPlayer còn sống
+        if (isAiTurn && aiPlayer.isAlive()) {
+
+            // 1) Gọi update() cho AI,
+            //    trong đó AI sẽ chạy Minimax/ESCAPE/... => di chuyển
+            aiPlayer.update(this);
+
+            // 2) Cập nhật game
+            updateGame();
+
+            // 3) Kết thúc lượt AI => chuyển về Player
+            isAiTurn = false;
             isPlayerTurn = true;
+
+            // 4) Thông báo
             notifyObservers(new AIPlayerMovedEvent(aiPlayer.getX(), aiPlayer.getY()));
         }
     }
+
+
+
 
     /**
      * Triển khai các phương thức của giao diện Subject
@@ -583,22 +630,29 @@ public class Game implements Cloneable, Subject {
      * Cập nhật các thực thể trong trò chơi như Balloon và AIPlayer.
      */
     public void updateEntities() {
+        // Cập nhật Balloon
         for (Balloon balloon : balloons) {
             balloon.update(this);
         }
-        if (aiPlayer.isAlive()) {
-            aiPlayer.update(this);
-        }
-        // Thêm các thực thể khác nếu cần
+        // Loại bỏ hoặc comment phần cập nhật AI
+        // if (aiPlayer.isAlive()) {
+        //     aiPlayer.update(this); // <-- BỎ ĐI
+        // }
+        // ...
     }
+
 
     /**
      * Cập nhật trạng thái tổng thể của trò chơi, bao gồm các bom và thực thể.
      */
     public void updateGame() {
+        // 1) updateBombs
         updateBombs();
+
+        // 2) updateEntities (Balloon, Player, AI, v.v.)
         updateEntities();
-        // Kiểm tra điều kiện kết thúc trò chơi
+
+        // 3) kiểm tra isOver
         if (isOver()) {
             gameOver = true;
             if (gameWon) {
@@ -608,6 +662,7 @@ public class Game implements Cloneable, Subject {
             }
         }
     }
+
 
     // Trong lớp Game.java
 

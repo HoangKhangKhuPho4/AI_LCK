@@ -23,44 +23,27 @@ public class AIPlayer extends Entity implements Cloneable, Subject {
     private final int MAX_ESCAPE_ATTEMPTS = 3;
     @Override
     public void update(Game game) {
-        if (!alive) {
-            System.out.println(this.getClass().getSimpleName() + " không còn sống.");
+        // 1) Nếu chưa đến lượt AI => thoát
+        if (!game.isAiTurn) {
             return;
         }
 
+        // 2) Kiểm tra AI còn sống
+        if (!alive) {
+            return;
+        }
+
+        // 3) Logic "đếm thời gian" (nếu có)
         ticksUntilMove--;
         if (ticksUntilMove > 0) {
-            // Chưa đến lượt di chuyển
-            return;
+            return; // Chờ thêm
         }
-        // Đặt lại ticksUntilMove cho lượt tiếp theo
         ticksUntilMove = moveDelay;
 
-        System.out.println("AIPlayer bắt đầu cập nhật...");
-        scanForHazards(game, 3);
-        predictBombs(game);
-        predictPlayerActions(game);
-        recordState(game);
-        updateStrategy();
-
-        if (isCornered(this, game.getGameMap())) {
-            escapeAttempts++;
-            System.out.println("AIPlayer đang bị dồn vào ngõ cụt, cố gắng thoát lần " + escapeAttempts);
-            if (escapeAttempts >= MAX_ESCAPE_ATTEMPTS) {
-                System.out.println("AIPlayer đã cố gắng thoát nhiều lần, chuyển sang chiến lược Minimax.");
-                setMovementStrategy(new MinimaxStrategy(7, true));
-                escapeAttempts = 0;
-            } else {
-                setMovementStrategy(new EscapeBombsStrategy(game.getGameMap()));
-            }
-        } else {
-            setMovementStrategy(new MinimaxStrategy(7, true));
-            escapeAttempts = 0;
-        }
-
-        // Thực hiện chiến lược di chuyển
+        // 4) Gọi chiến lược di chuyển (Minimax/EscapeBombs/...)
         getMovementStrategy().move(this, game);
-        System.out.println("AIPlayer đã di chuyển.");
+
+        System.out.println("AIPlayer di chuyển trong lượt AI.");
     }
 
     private boolean isCornered(AIPlayer aiPlayer, GameMap map) {
