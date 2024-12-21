@@ -49,19 +49,27 @@ public class Player extends Entity implements Observer, Cloneable {
     public void update(Event event) {
         if (event instanceof BombExplodedEvent) {
             BombExplodedEvent bombEvent = (BombExplodedEvent) event;
+            Bomb explodedBomb = bombEvent.getBomb();
+
+            // Check nếu bomb này do Player đặt
+            if (explodedBomb.getOwner() == this) {
+                this.increaseBombCount();
+                System.out.println("Bom của Player đã nổ, tăng bombCount lên: "
+                        + this.getBombCount());
+            }
+
+            // Vẫn xử lý vụ Player có bị nổ không
             List<int[]> explosionTiles = bombEvent.getExplosionTiles();
             for (int[] tile : explosionTiles) {
-                if (this.x == tile[0] && this.y == tile[1]) {
+                if (this.getX() == tile[0] && this.getY() == tile[1]) {
                     this.alive = false;
-                    System.out.println("Người chơi đã chết!");
-                    // Hiển thị thông báo trên giao diện người dùng
-                    JOptionPane.showMessageDialog(null, "Bạn đã chết!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+                    System.out.println("Người chơi đã chết do bom nổ!");
                     break;
                 }
             }
         }
-        // Xử lý các sự kiện khác nếu có
     }
+
 
     // Các phương thức liên quan đến tốc độ và phạm vi nổ
 

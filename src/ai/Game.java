@@ -1,4 +1,5 @@
 
+
 // File: ai/Game.java
 package ai;
 
@@ -619,19 +620,47 @@ public class Game implements Cloneable, Subject {
      * @return True nếu có đường thoát an toàn, false nếu không.
      */
     public boolean canEscape(Entity entity, int bombX, int bombY) {
+        System.out.println("Kiểm tra khả năng thoát khỏi bom tại (" + bombX + ", " + bombY + ") cho " + entity.getClass().getSimpleName());
+
         // Clone trò chơi để mô phỏng sau khi đặt bom
         Game clonedGame = this.clone();
-        if (clonedGame == null) return false;
+        if (clonedGame == null) {
+            System.out.println("Clone Game thất bại.");
+            return false;
+        }
 
         // Đặt bom trong trò chơi clone
         clonedGame.placeBomb(entity);
+        System.out.println(entity.getClass().getSimpleName() + " đã đặt bom tại (" + bombX + ", " + bombY + ") trong clone game.");
 
-        // Giả sử bạn có một chiến lược di chuyển để tìm đường thoát
-        // Sử dụng Pathfinding để kiểm tra xem có đường thoát an toàn nào không
+        // Sử dụng Pathfinding để tìm đường thoát
         Pathfinding pathfinding = new Pathfinding(clonedGame.getGameMap());
-        List<int[]> path = pathfinding.findSafePath(entity.getX(), entity.getY(), entity.getX(), entity.getY(), clonedGame);
 
-        return !path.isEmpty();
+        // Lấy danh sách các vị trí an toàn sau khi đặt bom
+        List<int[]> safePositions = clonedGame.getGameMap().findSafePositions(clonedGame.getAiPlayer(), clonedGame);
+        System.out.println("Các vị trí an toàn có thể di chuyển tới:");
+        for (int[] pos : safePositions) {
+            System.out.println("- (" + pos[0] + ", " + pos[1] + ")");
+        }
+
+        // Kiểm tra xem có đường đi nào tới các vị trí an toàn không
+        for (int[] pos : safePositions) {
+            List<int[]> path = pathfinding.findSafePath(
+                    clonedGame.getAiPlayer().getX(),
+                    clonedGame.getAiPlayer().getY(),
+                    pos[0],
+                    pos[1],
+                    clonedGame
+            );
+            if (!path.isEmpty()) {
+                System.out.println("Đã tìm thấy đường thoát tới (" + pos[0] + ", " + pos[1] + ")");
+                return true; // Tìm được một đường thoát an toàn
+            }
+        }
+
+        System.out.println("Không tìm thấy đường thoát an toàn.");
+        return false; // Không tìm được đường thoát an toàn
     }
+
 
 }

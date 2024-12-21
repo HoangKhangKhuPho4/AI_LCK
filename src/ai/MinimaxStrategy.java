@@ -471,8 +471,34 @@ public class MinimaxStrategy implements MovementStrategy {
                     game.addBomb(newBomb);
                     entity.placeBomb();
                     System.out.println(entity.getClass().getSimpleName() + " đặt bom tại (" + bombX + ", " + bombY + ").");
-                    // Thực hiện di chuyển thoát ngay sau khi đặt bom nếu cần
-                    // Bạn có thể thêm logic di chuyển thoát ở đây
+
+                    // Sau khi đặt bom, tìm đường thoát an toàn
+                    Pathfinding pathfinding = new Pathfinding(game.getGameMap());
+
+                    // Tìm vị trí an toàn gần nhất
+                    int[] safePosition = findNearestSafePosition(bombX, bombY, game);
+                    if (safePosition != null) {
+                        List<int[]> escapePath = pathfinding.findSafePath(
+                                bombX,
+                                bombY,
+                                safePosition[0],
+                                safePosition[1],
+                                game
+                        );
+
+                        // Nếu tìm được đường thoát, di chuyển tới bước tiếp theo
+                        if (!escapePath.isEmpty()) {
+                            int[] nextStep = escapePath.get(0);
+                            int dx = nextStep[0] - bombX;
+                            int dy = nextStep[1] - bombY;
+                            game.moveEntity(entity, dx, dy);
+                            System.out.println(entity.getClass().getSimpleName() + " di chuyển tới (" + nextStep[0] + ", " + nextStep[1] + ") để tránh bom.");
+                        } else {
+                            System.out.println(entity.getClass().getSimpleName() + " không thể tìm đường thoát sau khi đặt bom.");
+                        }
+                    } else {
+                        System.out.println("Không tìm thấy vị trí an toàn để thoát.");
+                    }
                 } else {
                     System.out.println("Không thể đặt bom tại (" + bombX + ", " + bombY + ") vì không có đường thoát an toàn.");
                 }
@@ -482,6 +508,33 @@ public class MinimaxStrategy implements MovementStrategy {
                 break;
         }
     }
+
+    /**
+     * Tìm vị trí an toàn gần nhất từ (bombX, bombY).
+     *
+     * @param bombX Tọa độ X của bom.
+     * @param bombY Tọa độ Y của bom.
+     * @param game  Trạng thái trò chơi hiện tại.
+     * @return Vị trí an toàn dưới dạng mảng int[]{x, y}, hoặc null nếu không tìm được.
+     */
+    private int[] findNearestSafePosition(int bombX, int bombY, Game game) {
+        List<int[]> safePositions = game.getGameMap().findSafePositions(game.getAiPlayer(), game);
+        if (safePositions.isEmpty()) return null;
+
+        // Tìm vị trí an toàn gần nhất
+        int minDistance = Integer.MAX_VALUE;
+        int[] nearest = null;
+        for (int[] pos : safePositions) {
+            int distance = Math.abs(pos[0] - bombX) + Math.abs(pos[1] - bombY);
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearest = pos;
+            }
+        }
+        return nearest;
+    }
+
+
 
     /**
      * Kiểm tra xem có thể đặt bom một cách an toàn tại vị trí (bombX, bombY) không.
@@ -509,11 +562,6 @@ public class MinimaxStrategy implements MovementStrategy {
         }
 
         // Kiểm tra xem có lối thoát an toàn nào cho AI không
-        // Bạn có thể sử dụng một chiến lược di chuyển khác hoặc một phương thức kiểm tra an toàn
-        // Ở đây, tôi giả định rằng bạn có một phương thức trong Game hoặc một chiến lược di chuyển
-        // để tìm kiếm đường thoát an toàn. Dưới đây là một ví dụ đơn giản:
-
-        // Giả sử sử dụng BFS để tìm đường thoát
         return clonedGame.canEscape(entity, bombX, bombY);
     }
 }

@@ -227,4 +227,30 @@ public class GameMap implements Cloneable {
         }
         return intMap;
     }
+
+    public List<int[]> findSafePositions(AIPlayer aiPlayer, Game game) {
+        List<int[]> safePositions = new ArrayList<>();
+        for (int x = 0; x < map.length; x++) {
+            for (int y = 0; y < map[0].length; y++) {
+                if (isWalkable(x, y)) {
+                    boolean isSafe = true;
+                    // Kiểm tra xem vị trí này có nằm trong phạm vi nổ của bất kỳ bom nào không
+                    for (Bomb bomb : game.getBombs()) {
+                        if (!bomb.isExploded()) {
+                            int distance = Math.abs(bomb.getX() - x) + Math.abs(bomb.getY() - y);
+                            if (distance <= bomb.getExplosionRange()) {
+                                isSafe = false;
+                                break;
+                            }
+                        }
+                    }
+                    // Kiểm tra xem có Balloon nào gần không (tùy thuộc vào logic của bạn)
+                    if (isSafe) {
+                        safePositions.add(new int[]{x, y});
+                    }
+                }
+            }
+        }
+        return safePositions;
+    }
 }

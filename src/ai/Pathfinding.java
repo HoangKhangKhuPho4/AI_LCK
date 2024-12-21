@@ -31,14 +31,16 @@ public class Pathfinding {
 
         Node start = new Node(startX, startY, null);
         start.gScore = 0;
-        start.fScore = heuristicForPathfinding(startX, startY, goalX, goalY, game);  // Sử dụng hàm heuristic mới
+        start.fScore = heuristicForPathfinding(startX, startY, goalX, goalY, game);
         openSet.add(start);
         allNodes.put(start.key(), start);
 
         while (!openSet.isEmpty()) {
             Node current = openSet.poll();
+            System.out.println("Đang xử lý Node: (" + current.x + ", " + current.y + ")");
 
             if (current.x == goalX && current.y == goalY) {
+                System.out.println("Đã tìm thấy đường đi tới đích: (" + goalX + ", " + goalY + ")");
                 return constructPath(current);
             }
 
@@ -46,10 +48,16 @@ public class Pathfinding {
                 int newX = current.x + dir[0];
                 int newY = current.y + dir[1];
 
-                if (!map.isWalkable(newX, newY)) continue;
+                if (!map.isWalkable(newX, newY)) {
+                    System.out.println("Không thể đi tới (" + newX + ", " + newY + ") - Ô không walkable.");
+                    continue;
+                }
 
                 double danger = dangerFactor(newX, newY, game);
-                if (danger > 0.7) continue; // Tránh các vị trí có nguy hiểm cao
+                if (danger > 0.7) {
+                    System.out.println("Không thể đi tới (" + newX + ", " + newY + ") - Nguy hiểm cao: " + danger);
+                    continue; // Tránh các vị trí có nguy hiểm cao
+                }
 
                 double tentativeGScore = current.gScore + distance(current.x, current.y, newX, newY) + danger;
                 String neighborKey = Node.key(newX, newY);
@@ -61,6 +69,7 @@ public class Pathfinding {
                     neighbor.fScore = neighbor.gScore + heuristicForPathfinding(newX, newY, goalX, goalY, game) + danger;
                     if (!openSet.contains(neighbor)) {
                         openSet.add(neighbor);
+                        System.out.println("Thêm Node vào OpenSet: (" + newX + ", " + newY + ") với fScore: " + neighbor.fScore);
                     }
                     allNodes.put(neighborKey, neighbor);
                 }
@@ -68,6 +77,7 @@ public class Pathfinding {
         }
 
         // Nếu không tìm được đường đi
+        System.out.println("Không tìm thấy đường đi tới đích: (" + goalX + ", " + goalY + ")");
         return Collections.emptyList();
     }
 

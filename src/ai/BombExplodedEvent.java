@@ -1,17 +1,20 @@
-
-
-
-
 // File: ai/BombExplodedEvent.java
 package ai;
 
 import java.util.List;
 
 public class BombExplodedEvent extends Event {
-    private List<int[]> explosionTiles;
+    private Bomb bomb;               // Quả bom vừa nổ
+    private List<int[]> explosionTiles; // Danh sách toạ độ chịu ảnh hưởng
 
-    public BombExplodedEvent(List<int[]> explosionTiles) {
+    // Constructor mới: nhận cả bomb lẫn explosionTiles
+    public BombExplodedEvent(Bomb bomb, List<int[]> explosionTiles) {
+        this.bomb = bomb;
         this.explosionTiles = explosionTiles;
+    }
+
+    public Bomb getBomb() {
+        return bomb;
     }
 
     public List<int[]> getExplosionTiles() {

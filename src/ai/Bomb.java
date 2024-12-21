@@ -126,10 +126,11 @@ public class Bomb implements Subject, Cloneable {
                 exploded = true;
                 // Xử lý nổ bom
                 processExplosion(game);
-                // Thông báo sự kiện nổ bom cho các Observer
+                // Xử lý nổ bom, tính ra explosionTiles
                 List<int[]> explosionTiles = game.getExplosionTiles(this);
-                notifyObservers(new BombExplodedEvent(explosionTiles));
-                // Debug: Thông báo bom đã nổ
+                // Thông báo sự kiện nổ bom cho các Observer
+                notifyObservers(new BombExplodedEvent(this, explosionTiles));
+                    // Debug: Thông báo bom đã nổ
                 System.out.println("Bom tại (" + x + ", " + y + ") đã nổ.");
             }
         } else {
