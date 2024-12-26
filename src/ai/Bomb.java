@@ -1,10 +1,11 @@
 
-
 package ai;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+
 /**
  * Lớp đại diện cho bom trong trò chơi.
  */
@@ -16,13 +17,14 @@ public class Bomb implements Subject, Cloneable {
     private Entity owner; // Thực thể sở hữu bom (Player hoặc AIPlayer)
     private int explosionRange; // Phạm vi nổ của bom
     private List<Observer> observers; // Danh sách các Observer
+
     /**
      * Constructor khởi tạo bom với vị trí, countdown, chủ nhân và phạm vi nổ.
      *
-     * @param x Tọa độ X của bom.
-     * @param y Tọa độ Y của bom.
-     * @param countdown Số lượt trước khi bom nổ.
-     * @param owner Thực thể sở hữu bom.
+     * @param x              Tọa độ X của bom.
+     * @param y              Tọa độ Y của bom.
+     * @param countdown      Số lượt trước khi bom nổ.
+     * @param owner          Thực thể sở hữu bom.
      * @param explosionRange Phạm vi nổ của bom.
      */
     public Bomb(int x, int y, int countdown, Entity owner, int explosionRange) {
@@ -43,30 +45,39 @@ public class Bomb implements Subject, Cloneable {
     public int getX() {
         return x;
     }
+
     public int getY() {
         return y;
     }
+
     public int getCountdown() {
         return countdown;
     }
+
     public Entity getOwner() {
         return owner;
     }
+
     public int getExplosionRange() {
         return explosionRange;
     }
+
     public boolean isExploded() {
         return exploded;
     }
+
     public boolean isExplosionFinished() {
         return exploded && explosionDuration == 0;
     }
+
     public void setX(int x) {
         this.x = x;
     }
+
     public void setY(int y) {
         this.y = y;
     }
+
     /**
      * Đặt lại countdown của bom.
      *
@@ -75,6 +86,7 @@ public class Bomb implements Subject, Cloneable {
     public void setCountdown(int countdown) {
         this.countdown = countdown;
     }
+
     /**
      * Triển khai phương thức attach từ giao diện Subject.
      *
@@ -86,6 +98,7 @@ public class Bomb implements Subject, Cloneable {
             observers.add(observer);
         }
     }
+
     /**
      * Triển khai phương thức detach từ giao diện Subject.
      *
@@ -95,6 +108,7 @@ public class Bomb implements Subject, Cloneable {
     public void detach(Observer observer) {
         observers.remove(observer);
     }
+
     /**
      * Triển khai phương thức notifyObservers từ giao diện Subject.
      *
@@ -106,6 +120,7 @@ public class Bomb implements Subject, Cloneable {
             observer.update(event);
         }
     }
+
     /**
      * Cập nhật trạng thái của bom. Được gọi mỗi lượt chơi.
      *
@@ -144,7 +159,6 @@ public class Bomb implements Subject, Cloneable {
     }
 
 
-
     /**
      * Xử lý hiệu ứng nổ của bom, bao gồm phá hủy tường phá hủy và tạo vật phẩm.
      *
@@ -158,10 +172,10 @@ public class Bomb implements Subject, Cloneable {
             int ty = tile[1];
             char currentTile = map.getTile(tx, ty);
             if (currentTile == 'D') { // Giả sử 'D' là tường phá hủy
-// Phá hủy tường
+                // Phá hủy tường
                 map.setTile(tx, ty, ' ');
                 System.out.println("Tường phá hủy tại (" + tx + ", " + ty + ") đã bị phá hủy.");
-// 20% cơ hội tạo vật phẩm sau khi phá hủy tường
+                // 20% cơ hội tạo vật phẩm sau khi phá hủy tường
                 Random rand = new Random();
                 if (rand.nextInt(100) < 20) {
                     Item.ItemType type = rand.nextBoolean() ? Item.ItemType.SPEED : Item.ItemType.EXPLOSION_RANGE;
@@ -169,10 +183,11 @@ public class Bomb implements Subject, Cloneable {
                     System.out.println("Vật phẩm " + type + " xuất hiện tại (" + tx + ", " + ty + ").");
                 }
             }
-// Các xử lý khác nếu cần thiết, ví dụ: ảnh hưởng đến các thực thể tại tile
-// Lưu ý: Các thực thể sẽ nhận sự kiện BombExplodedEvent thông qua Observer Pattern
+          // Các xử lý khác nếu cần thiết, ví dụ: ảnh hưởng đến các thực thể tại tile
+          // Lưu ý: Các thực thể sẽ nhận sự kiện BombExplodedEvent thông qua Observer Pattern
         }
     }
+
     /**
      * Clone bom để tạo bản sao sâu. Được sử dụng trong các thuật toán tìm kiếm như Minimax.
      *
@@ -190,6 +205,7 @@ public class Bomb implements Subject, Cloneable {
             return null;
         }
     }
+
     /**
      * Giảm countdown của bom. Có thể sử dụng trong các tình huống đặc biệt.
      */

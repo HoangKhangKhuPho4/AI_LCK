@@ -16,7 +16,7 @@ public class GameFrame extends JFrame implements Observer {
     private JLabel timeLabel;  // Label to display the remaining time
     private JLabel livesLabel; // Label to display the player's lives
     private int score = 0; // Initialize the score to 0
-    private int timeLeft = 180; // Time in seconds (3 minutes)
+    private int timeLeft = 600; // Time in seconds (3 minutes)
     private int lives = 1; // Default lives
     private Timer gameTimer;
 
