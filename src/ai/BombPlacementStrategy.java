@@ -1,5 +1,6 @@
 
 
+
 package ai;
 
 import java.util.List;
@@ -8,15 +9,13 @@ import java.util.List;
  * Chiến lược đặt bom cho AIPlayer.
  */
 public class BombPlacementStrategy implements MovementStrategy {
-    private double bombPlacementThreshold = 0.7; // Ngưỡng đánh giá để đặt bom
+    private double bombPlacementThreshold = 0.2; // Ngưỡng đánh giá để đặt bom
 
     @Override
     public void move(Entity entity, Game game) {
         // Không thực hiện di chuyển trong chiến lược đặt bom
         // Chiến lược này chỉ tập trung vào việc đặt bom
     }
-
-
 
     /**
      * Quyết định đặt bom dựa trên vị trí hiện tại và tình trạng trò chơi.

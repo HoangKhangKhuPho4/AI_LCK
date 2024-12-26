@@ -1,3 +1,4 @@
+
 package ai;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Objects;
  */
 public class Node implements Cloneable {
     // Vị trí của AIPlayer
+    private boolean justPlacedBomb;
     private int aiPlayerX;
     private int aiPlayerY;
 
@@ -68,6 +70,12 @@ public class Node implements Cloneable {
         this.gScore = Double.MAX_VALUE;
         this.fScore = Double.MAX_VALUE;
     }
+
+
+    public void setJustPlacedBomb(boolean justPlacedBomb) {
+        this.justPlacedBomb = justPlacedBomb;
+    }
+
 
     // Getter và Setter cho playerBombCount
     public int getPlayerBombCount() { return playerBombCount; }
@@ -268,12 +276,14 @@ public class Node implements Cloneable {
             cloned.gameMap = deepCopyGameMap(this.gameMap);
             cloned.bombs = deepCopyBombs(this.bombs);
             cloned.parent = (this.parent != null) ? this.parent.clone() : null;
+            cloned.justPlacedBomb = this.justPlacedBomb;
             return cloned;
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
             return null;
         }
     }
+
 
     /**
      * Phương thức equals để so sánh hai Node dựa trên trạng thái của chúng.
@@ -315,5 +325,10 @@ public class Node implements Cloneable {
     public int getAIPlayerY() {
         return aiPlayerY;
     }
+
+    public boolean hasJustPlacedBomb() {
+        return justPlacedBomb;
+    }
+
 
 }

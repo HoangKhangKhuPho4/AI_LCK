@@ -1,4 +1,5 @@
 
+
 package ai;
 
 import java.util.List;
@@ -52,13 +53,14 @@ public abstract class Entity implements Cloneable, Observer {
      * @return true nếu đặt bom thành công, false nếu không còn bom để đặt.
      */
     public boolean placeBomb() {
-        if (bombCount > 0) {
+        if (bombCount > 0) { // Chỉ cho phép đặt bom nếu còn bombCount
             bombCount--;
             System.out.println(this.getClass().getSimpleName() + " đã đặt một quả bom tại: (" + x + ", " + y + ")");
-            return true;
+            return true; // Đặt bom thành công
         }
-        return false;
+        return false; // Không còn bom để đặt
     }
+
 
     /**
      * Tăng số lượng bom có thể đặt.

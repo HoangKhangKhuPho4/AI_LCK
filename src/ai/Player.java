@@ -1,6 +1,5 @@
 
 package ai;
-
 import java.util.List;
 import javax.swing.JOptionPane;
 
@@ -12,7 +11,6 @@ public class Player extends Entity implements Observer, Cloneable {
     private int explosionRange;
     private boolean alive;
     private int bombCount; // Số lượng bom mà người chơi có thể đặt
-
     /**
      * Constructor khởi tạo người chơi với vị trí ban đầu.
      *
@@ -193,6 +191,5 @@ public class Player extends Entity implements Observer, Cloneable {
 
     @Override
     public void update(Game game) {
-
     }
 }

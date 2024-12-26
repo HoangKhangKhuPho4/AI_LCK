@@ -1,3 +1,4 @@
+
 package ai;
 
 import java.util.ArrayList;
@@ -66,6 +67,8 @@ public class MinimaxStrategy implements MovementStrategy {
         }
     }
 
+
+
     /**
      * Kiểm tra xem trạng thái trò chơi có kết thúc hay không.
      *
@@ -106,10 +109,6 @@ public class MinimaxStrategy implements MovementStrategy {
 
         // Số bom còn lại và phạm vi nổ
         score += state.getBombCount() * 20; // AI có bom hơn
-        // Bạn có thể thêm thông tin về Player bombCount và explosionRange nếu cần
-        // score -= state.getPlayerBombCount() * 20;
-        // score += state.getPlayerExplosionRange() * 15;
-        // score += state.getAiExplosionRange() * 15;
 
         // Nguy hiểm từ bom
         for (Bomb bomb : state.getBombs()) {
@@ -136,8 +135,15 @@ public class MinimaxStrategy implements MovementStrategy {
         int availableDirections = countAvailableDirections(state.getAiPlayerX(), state.getAiPlayerY(), state.getGameMap());
         score += availableDirections * 10; // Ưu tiên các vị trí có nhiều hướng đi hơn
 
+        // **Thêm điểm thưởng cho hành động Đặt Bom**
+        if (state.hasJustPlacedBomb()) {
+            score += 150; // Tăng điểm khi AI đã đặt bom
+        }
+
         return score;
     }
+
+
 
     /**
      * Constructor để khởi tạo MinimaxStrategy với độ sâu tối đa và kiểu người chơi (Maximizing hoặc Minimizing).
@@ -319,6 +325,7 @@ public class MinimaxStrategy implements MovementStrategy {
                         Bomb newBomb = new Bomb(clonedState.getAiPlayerX(), clonedState.getAiPlayerY(), 30, "AIPlayer", clonedState.getExplosionRange());
                         clonedState.getBombs().add(newBomb);
                         clonedState.setBombCount(clonedState.getBombCount() - 1);
+                        markBombPlaced(clonedState); // Đánh dấu rằng bom đã được đặt
                     } else {
                         return null; // Không thể đặt bom
                     }
@@ -338,7 +345,9 @@ public class MinimaxStrategy implements MovementStrategy {
         return clonedState;
     }
 
-
+    private void markBombPlaced(Node state) {
+        state.setJustPlacedBomb(true);
+    }
 
 
     /**
@@ -534,8 +543,6 @@ public class MinimaxStrategy implements MovementStrategy {
         return nearest;
     }
 
-
-
     /**
      * Kiểm tra xem có thể đặt bom một cách an toàn tại vị trí (bombX, bombY) không.
      *
@@ -546,22 +553,26 @@ public class MinimaxStrategy implements MovementStrategy {
      * @return true nếu có thể đặt bom an toàn, ngược lại false.
      */
     private boolean canPlaceBombSafely(Game game, Entity entity, int bombX, int bombY) {
-        // Tạm thời đặt bom và kiểm tra xem AI còn đường thoát hay không
-        Game clonedGame = game.clone();
-        if (clonedGame == null) return false;
-
-        clonedGame.addBomb(new Bomb(bombX, bombY, 30, entity, entity.getExplosionRange()));
-        if (entity instanceof AIPlayer) {
-            AIPlayer aiPlayerClone = clonedGame.getAiPlayer();
-            aiPlayerClone.setX(bombX);
-            aiPlayerClone.setY(bombY);
-        } else if (entity instanceof Player) {
-            Player playerClone = clonedGame.getPlayer();
-            playerClone.setX(bombX);
-            playerClone.setY(bombY);
+        // Đảm bảo AIPlayer có bombCount > 0
+        if (entity.getBombCount() <= 0) {
+            System.out.println("AIPlayer không còn bom để đặt.");
+            return false;
         }
 
-        // Kiểm tra xem có lối thoát an toàn nào cho AI không
-        return clonedGame.canEscape(entity, bombX, bombY);
+        // Clone game để kiểm tra
+        Game clonedGame = game.clone();
+        if (clonedGame == null) {
+            System.out.println("Không thể clone game.");
+            return false;
+        }
+
+        // Kiểm tra xem AIPlayer có thể thoát an toàn sau khi đặt bom
+        if (!clonedGame.canEscape(entity, bombX, bombY)) {
+            System.out.println("AIPlayer không thể thoát sau khi đặt bom.");
+            return false;
+        }
+
+        System.out.println("AIPlayer có thể đặt bom an toàn.");
+        return true;
     }
 }

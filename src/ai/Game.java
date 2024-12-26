@@ -1,8 +1,6 @@
 
-
 // File: ai/Game.java
 package ai;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -376,28 +374,24 @@ public class Game implements Cloneable, Subject {
     /**
      * Phương thức clone để tạo bản sao sâu của trò chơi.
      */
+
     @Override
     public Game clone() {
         try {
-            Game cloned = (Game) super.clone();
-            cloned.gameMap = this.gameMap.clone();
-            cloned.player = this.player.clone();
-            cloned.aiPlayer = this.aiPlayer.clone();
-            cloned.bombs = new ArrayList<>();
+            Game clonedGame = (Game) super.clone();
+            clonedGame.gameMap = this.gameMap.clone();
+            clonedGame.bombs = new ArrayList<>();
             for (Bomb bomb : this.bombs) {
-                cloned.bombs.add(bomb.clone());
+                clonedGame.bombs.add(bomb.clone());
             }
-            cloned.balloons = new ArrayList<>();
-            for (Balloon balloon : this.balloons) {
-                cloned.balloons.add(balloon.clone());
-            }
-            cloned.observers = new ArrayList<>(); // Không clone các Observer
-            return cloned;
+            // Clone các thuộc tính khác nếu cần
+            return clonedGame;
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
             return null;
         }
     }
+
 
     /**
      * Lấy mã hash của trạng thái trò chơi.
@@ -738,6 +732,5 @@ public class Game implements Cloneable, Subject {
         System.out.println("Không tìm thấy đường thoát an toàn.");
         return false; // Không tìm được đường thoát an toàn
     }
-
 
 }

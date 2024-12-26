@@ -1,4 +1,5 @@
 
+
 package ai;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -130,7 +131,7 @@ public class Bomb implements Subject, Cloneable {
                 List<int[]> explosionTiles = game.getExplosionTiles(this);
                 // Thông báo sự kiện nổ bom cho các Observer
                 notifyObservers(new BombExplodedEvent(this, explosionTiles));
-                    // Debug: Thông báo bom đã nổ
+                // Debug: Thông báo bom đã nổ
                 System.out.println("Bom tại (" + x + ", " + y + ") đã nổ.");
             }
         } else {
